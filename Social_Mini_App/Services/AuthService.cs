@@ -42,7 +42,8 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
 
         // Gửi mail xác nhận
-        var verificationUrl = $"http://localhost:3000/verify-email?token={user.VerificationToken}";
+        var frontendUrl = _configuration["AppSettings:FrontendUrl"] ?? "http://localhost:3000";
+        var verificationUrl = $"{frontendUrl.TrimEnd('/')}/verify-email?token={user.VerificationToken}";
         
         // Đọc template từ file
         string mailBody;
