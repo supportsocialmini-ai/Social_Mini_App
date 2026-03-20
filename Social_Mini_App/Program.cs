@@ -30,7 +30,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MiniSocialCon")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("MiniSocialCon")));
 // Add services to the container.
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ILikeService, LikeService>();

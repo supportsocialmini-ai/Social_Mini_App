@@ -10,7 +10,9 @@ services:
       - key: ASPNETCORE_URLS
         value: http://+:10000
       - key: ConnectionStrings__MiniSocialCon
-        sync: false
+        fromDatabase:
+          name: social-mini-db
+          property: connectionString
       - key: AppSettings__Token
         sync: false
       - key: MailSettings__Email
@@ -23,3 +25,8 @@ services:
         value: "587"
       - key: MailSettings__DisplayName
         value: Social Mini Network
+
+databases:
+  - name: social-mini-db
+    plan: free
+    region: singapore
