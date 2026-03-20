@@ -163,11 +163,25 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 // Luôn bật Swagger để dễ debug khi deploy
 app.UseSwagger();
-app.UseSwaggerUI(options =>
+
+if (app.Environment.IsDevelopment())
 {
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-    options.RoutePrefix = string.Empty; // Để Swagger là trang mặc định (/)
-});
+    // Ở Local: Giữ đường dẫn /swagger cho chuẩn
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    });
+}
+else
+{
+    // Ở Production: Cho Swagger hiển thị ở trang chủ (/)
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+        options.RoutePrefix = string.Empty;
+    });
+}
+
 app.UseCors("MyAllowSpecificOrigins");
 
 app.UseAuthentication();

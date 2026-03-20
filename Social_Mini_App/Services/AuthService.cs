@@ -65,10 +65,10 @@ public class AuthService : IAuthService
         {
             await _mailService.SendEmailAsync(user.Email, "Xác nhận tài khoản SocialMini", mailBody);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // Có thể log lỗi ở đây
-            return "Đăng ký thành công nhưng không thể gửi mail xác nhận. Vui lòng liên hệ admin.";
+            return $"Đăng ký thành công nhưng không thể gửi mail xác nhận (Lỗi: {ex.Message}). Vui lòng liên hệ admin.";
         }
 
         return "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.";
