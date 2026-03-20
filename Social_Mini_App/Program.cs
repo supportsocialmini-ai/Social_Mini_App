@@ -30,7 +30,19 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("MiniSocialCon")));
+{
+    var connectionString = builder.Configuration.GetConnectionString("MiniSocialCon");
+    
+    // Nếu là chuỗi URI (postgres://...) từ Render, ta cần parse lại cho đúng định dạng ADO.NET
+    if (connectionString != null && connectionString.StartsWith("postgres://"))
+    {
+        var databaseUri = new Uri(connectionString);
+        var userInfo = databaseUri.UserInfo.Split(':');
+        connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=True;";
+    }
+    
+    options.UseNpgsql(connectionString);
+});
 // Add services to the container.
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
