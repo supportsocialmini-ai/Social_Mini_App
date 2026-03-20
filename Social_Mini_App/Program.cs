@@ -18,10 +18,11 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins(
-                    "http://localhost:3000",  // React development server
-                    "http://localhost:5173",  // Vite React development server
-                    "http://127.0.0.1:5500", // Live Server (VS Code)
-                    "null"                    // Cho phép nếu mày mở file HTML trực tiếp bằng trình duyệt
+                    "http://localhost:3000",
+                    "http://localhost:5173",
+                    "http://127.0.0.1:5500",
+                    "https://social-mini-app.onrender.com", // Sản phẩm thật trên Render
+                    "null"
                   )
                   .AllowAnyHeader()
                   .AllowAnyMethod()
