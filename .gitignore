@@ -1,0 +1,25 @@
+## [Visual Studio]
+.vs/
+
+## [Build folders]
+[Bb]in/
+[Oo]bj/
+
+## [Publish folders]
+publish/
+
+## [User-specific files]
+*.user
+*.userosscache
+*.sln.doccache
+
+## [Secrets & Configuration]
+# Sensitive settings that should not be in source control
+Social_Mini_App/appsettings.json
+Social_Mini_App/appsettings.Development.json
+
+## [Environment Variables]
+.env
+
+## [Docker]
+docker-compose.override.yml
