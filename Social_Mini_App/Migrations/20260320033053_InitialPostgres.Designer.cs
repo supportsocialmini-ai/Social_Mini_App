@@ -2,65 +2,68 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MiniSocialNetwork.Data;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace Social_Mini_App.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20260313063214_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260320033053_InitialPostgres")]
+    partial class InitialPostgres
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("MiniSocialNetwork.Models.User", b =>
                 {
                     b.Property<Guid>("UserId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("AvatarUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsVerified")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("VerificationToken")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId");
 
@@ -71,23 +74,26 @@ namespace Social_Mini_App.Migrations
                 {
                     b.Property<Guid>("CommentId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("Content")
+                    b.Property<string>("CommentContent")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("ParentCommentId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("PostId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.HasKey("CommentId");
 
@@ -100,45 +106,110 @@ namespace Social_Mini_App.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("Social_Mini_App.Models.Friend", b =>
+            modelBuilder.Entity("Social_Mini_App.Models.Conversation", b =>
                 {
-                    b.Property<Guid>("RequestID")
+                    b.Property<Guid>("ConversationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
-                    b.Property<Guid>("AddresseeID")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("IsGroupChat")
+                        .HasColumnType("boolean");
 
-                    b.Property<Guid>("RequesterID")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Title")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("ConversationId");
+
+                    b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("Social_Mini_App.Models.ConversationParticipant", b =>
+                {
+                    b.Property<Guid>("ParticipantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ParticipantId");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ConversationParticipants");
+                });
+
+            modelBuilder.Entity("Social_Mini_App.Models.Friendship", b =>
+                {
+                    b.Property<Guid>("FriendshipId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("character varying(20)");
 
-                    b.HasKey("RequestID");
+                    b.HasKey("FriendshipId");
 
-                    b.HasIndex("AddresseeID");
+                    b.ToTable("Friendships");
+                });
 
-                    b.HasIndex("RequesterID");
+            modelBuilder.Entity("Social_Mini_App.Models.FriendshipMember", b =>
+                {
+                    b.Property<Guid>("MemberId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
-                    b.ToTable("Friends");
+                    b.Property<Guid>("FriendshipId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsRequestSender")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("MemberId");
+
+                    b.HasIndex("FriendshipId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("FriendshipMembers");
                 });
 
             modelBuilder.Entity("Social_Mini_App.Models.Like", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("PostId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("UserId", "PostId");
 
@@ -151,27 +222,30 @@ namespace Social_Mini_App.Migrations
                 {
                     b.Property<Guid>("MessageId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
-                    b.Property<Guid>("ReceiverId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("MessageContent")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid>("SenderId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.HasKey("MessageId");
 
-                    b.HasIndex("ReceiverId");
+                    b.HasIndex("ConversationId");
 
                     b.HasIndex("SenderId");
 
@@ -182,30 +256,30 @@ namespace Social_Mini_App.Migrations
                 {
                     b.Property<Guid>("NotificationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
+
+                    b.Property<string>("NotificationType")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("PostId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("ReceiverId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("SenderId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("uuid");
 
                     b.HasKey("NotificationId");
 
@@ -218,25 +292,28 @@ namespace Social_Mini_App.Migrations
                 {
                     b.Property<Guid>("PostId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostContent")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Privacy")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.HasKey("PostId");
 
@@ -271,23 +348,42 @@ namespace Social_Mini_App.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Social_Mini_App.Models.Friend", b =>
+            modelBuilder.Entity("Social_Mini_App.Models.ConversationParticipant", b =>
                 {
-                    b.HasOne("MiniSocialNetwork.Models.User", "Addressee")
+                    b.HasOne("Social_Mini_App.Models.Conversation", "Conversation")
+                        .WithMany("Participants")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MiniSocialNetwork.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("AddresseeID")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("MiniSocialNetwork.Models.User", "Requester")
+                    b.Navigation("Conversation");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Social_Mini_App.Models.FriendshipMember", b =>
+                {
+                    b.HasOne("Social_Mini_App.Models.Friendship", "Friendship")
+                        .WithMany("Members")
+                        .HasForeignKey("FriendshipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MiniSocialNetwork.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("RequesterID")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Addressee");
+                    b.Navigation("Friendship");
 
-                    b.Navigation("Requester");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Social_Mini_App.Models.Like", b =>
@@ -311,9 +407,9 @@ namespace Social_Mini_App.Migrations
 
             modelBuilder.Entity("Social_Mini_App.Models.Message", b =>
                 {
-                    b.HasOne("MiniSocialNetwork.Models.User", "Receiver")
-                        .WithMany()
-                        .HasForeignKey("ReceiverId")
+                    b.HasOne("Social_Mini_App.Models.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -323,7 +419,7 @@ namespace Social_Mini_App.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Receiver");
+                    b.Navigation("Conversation");
 
                     b.Navigation("Sender");
                 });
@@ -358,6 +454,18 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.Comment", b =>
                 {
                     b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("Social_Mini_App.Models.Conversation", b =>
+                {
+                    b.Navigation("Messages");
+
+                    b.Navigation("Participants");
+                });
+
+            modelBuilder.Entity("Social_Mini_App.Models.Friendship", b =>
+                {
+                    b.Navigation("Members");
                 });
 
             modelBuilder.Entity("Social_Mini_App.Models.Post", b =>

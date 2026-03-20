@@ -113,6 +113,22 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Tự động chạy Migration khi khởi động (Xịn cho Render)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<DataContext>();
+        context.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
+
 // Configure the HTTP request pipeline.
 // Luôn bật Swagger để dễ debug khi deploy
 app.UseSwagger();
