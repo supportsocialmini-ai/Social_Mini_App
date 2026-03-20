@@ -14,6 +14,13 @@ using System.Text.Json;
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Disable "Reload on Change" for all configuration file sources to avoid hitting inotify limits on Render
+foreach (var source in builder.Configuration.Sources.OfType<Microsoft.Extensions.Configuration.FileConfigurationSource>())
+{
+    source.ReloadOnChange = false;
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyAllowSpecificOrigins",
