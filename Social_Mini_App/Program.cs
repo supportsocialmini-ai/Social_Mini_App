@@ -114,11 +114,13 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Luôn bật Swagger để dễ debug khi deploy
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    options.RoutePrefix = string.Empty; // Để Swagger là trang mặc định (/)
+});
 app.UseCors("MyAllowSpecificOrigins");
 
 app.UseAuthentication();
