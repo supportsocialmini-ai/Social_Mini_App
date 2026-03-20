@@ -33,8 +33,14 @@ builder.Services.AddDbContext<DataContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("MiniSocialCon");
     
-    // Nếu là chuỗi URI (postgres://...) từ Render, ta cần parse lại cho đúng định dạng ADO.NET
-    if (connectionString != null && connectionString.StartsWith("postgres://"))
+    // Render thường cung cấp dưới dạng URI (postgres:// hoặc postgresql://)
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        // Fallback sang DATABASE_URL nếu MiniSocialCon trống (mặc định của Render)
+        connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+    }
+
+    if (!string.IsNullOrEmpty(connectionString) && (connectionString.StartsWith("postgres://") || connectionString.StartsWith("postgresql://")))
     {
         var databaseUri = new Uri(connectionString);
         var userInfo = databaseUri.UserInfo.Split(':');
