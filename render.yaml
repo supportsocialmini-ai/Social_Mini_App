@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: social-mini-app
+    runtime: docker
+    plan: free
+    region: singapore
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:10000
+      - key: ConnectionStrings__MiniSocialCon
+        sync: false
+      - key: AppSettings__Token
+        sync: false
+      - key: MailSettings__Email
+        sync: false
+      - key: MailSettings__Password
+        sync: false
+      - key: MailSettings__Host
+        value: smtp.gmail.com
+      - key: MailSettings__Port
+        value: "587"
+      - key: MailSettings__DisplayName
+        value: Social Mini Network
