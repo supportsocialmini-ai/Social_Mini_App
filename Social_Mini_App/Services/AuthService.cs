@@ -41,32 +41,32 @@ public class AuthService : IAuthService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Gửi mail xác nhận
-        var frontendUrl = _configuration["AppSettings:FrontendUrl"] ?? "http://localhost:3000";
-        var verificationUrl = $"{frontendUrl.TrimEnd('/')}/verify-email?token={user.VerificationToken}";
-        
-        // Đọc template từ file
-        string mailBody;
-        try 
-        {
-            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "EmailTemplates", "VerifyEmail.html");
-            mailBody = File.ReadAllText(templatePath);
-            mailBody = mailBody.Replace("{FullName}", user.FullName)
-                               .Replace("{VerificationUrl}", verificationUrl)
-                               .Replace("{VerificationToken}", user.VerificationToken);
-        }
-        catch (Exception)
-        {
-            // Fallback nếu không đọc được file
-            mailBody = $"Chào {user.FullName}, mã xác nhận của bạn là: {user.VerificationToken}. Hoặc nhấn vào link: {verificationUrl}";
-        }
-
         // Gửi mail xác nhận ở chế độ chạy ngầm (Background Task) 
         // để không làm chậm quá trình đăng ký của người dùng
         _ = Task.Run(async () =>
         {
             try
             {
+                // Gửi mail xác nhận
+                var frontendUrl = _configuration["AppSettings:FrontendUrl"] ?? "http://localhost:3000";
+                var verificationUrl = $"{frontendUrl.TrimEnd('/')}/verify-email?token={user.VerificationToken}";
+                
+                // Đọc template từ file
+                string mailBody;
+                try 
+                {
+                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "EmailTemplates", "VerifyEmail.html");
+                    mailBody = File.ReadAllText(templatePath);
+                    mailBody = mailBody.Replace("{FullName}", user.FullName)
+                                       .Replace("{VerificationUrl}", verificationUrl)
+                                       .Replace("{VerificationToken}", user.VerificationToken);
+                }
+                catch (Exception)
+                {
+                    // Fallback nếu không đọc được file
+                    mailBody = $"Chào {user.FullName}, mã xác nhận của bạn là: {user.VerificationToken}. Hoặc nhấn vào link: {verificationUrl}";
+                }
+
                 await _mailService.SendEmailAsync(user.Email, "Xác nhận tài khoản SocialMini", mailBody);
             }
             catch (Exception ex)
@@ -87,7 +87,7 @@ public class AuthService : IAuthService
             return null;
 
         if (!user.IsActive)
-            throw new Exception("Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để xác nhận hoặc nhập mã 6 chữ số để xác nhận sử dụng");
+            throw new Exception("USER_NOT_VERIFIED");
 
         return CreateToken(user);
     }

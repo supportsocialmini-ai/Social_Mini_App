@@ -16,7 +16,7 @@ services:
       - key: AppSettings__Token
         sync: false
       - key: AppSettings__FrontendUrl
-        value: https://socialmini-wine.vercel.app
+        value: https://socialminiweb.vercel.app
       - key: MailSettings__Email
         sync: false
       - key: MailSettings__Password
