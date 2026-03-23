@@ -59,9 +59,11 @@ namespace MiniSocialNetwork.Services
                     ApplicationName = "SocialMini"
                 });
 
+                string encodedSubject = "=?utf-8?B?" + Convert.ToBase64String(Encoding.UTF8.GetBytes(subject)) + "?=";
+                
                 // Xây dựng nội dung email theo chuẩn MIME
                 var mailContent = $"To: {to}\r\n" +
-                                 $"Subject: {subject}\r\n" +
+                                 $"Subject: {encodedSubject}\r\n" +
                                  $"Content-Type: text/html; charset=utf-8\r\n\r\n" +
                                  $"{body}";
 
