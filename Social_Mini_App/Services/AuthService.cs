@@ -11,9 +11,9 @@ using System.IO;
 
 public class AuthService : IAuthService
 {
-    private readonly DataContext _context;
-    private readonly IConfiguration _configuration;
-    private readonly IEmailService _mailService;
+    private readonly DataContext _context = null!;
+    private readonly IConfiguration _configuration = null!;
+    private readonly IEmailService _mailService = null!;
 
     public AuthService(DataContext context, IConfiguration configuration, IEmailService mailService)
     {
@@ -55,7 +55,7 @@ public class AuthService : IAuthService
                                .Replace("{VerificationUrl}", verificationUrl)
                                .Replace("{VerificationToken}", user.VerificationToken);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Fallback nếu không đọc được file
             mailBody = $"Chào {user.FullName}, mã xác nhận của bạn là: {user.VerificationToken}. Hoặc nhấn vào link: {verificationUrl}";

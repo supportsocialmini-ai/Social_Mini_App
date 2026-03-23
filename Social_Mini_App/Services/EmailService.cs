@@ -13,8 +13,8 @@ namespace MiniSocialNetwork.Services
 {
     public class EmailService : IEmailService
     {
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<EmailService> _logger;
+        private readonly IConfiguration _configuration = null!;
+        private readonly ILogger<EmailService> _logger = null!;
 
         public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
