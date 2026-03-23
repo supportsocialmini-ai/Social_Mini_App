@@ -61,15 +61,21 @@ public class AuthService : IAuthService
             mailBody = $"Chào {user.FullName}, mã xác nhận của bạn là: {user.VerificationToken}. Hoặc nhấn vào link: {verificationUrl}";
         }
 
-        try
+        // Gửi mail xác nhận ở chế độ chạy ngầm (Background Task) 
+        // để không làm chậm quá trình đăng ký của người dùng
+        _ = Task.Run(async () =>
         {
-            await _mailService.SendEmailAsync(user.Email, "Xác nhận tài khoản SocialMini", mailBody);
-        }
-        catch (Exception ex)
-        {
-            // Có thể log lỗi ở đây
-            return $"Đăng ký thành công nhưng không thể gửi mail xác nhận (Lỗi: {ex.Message}). Vui lòng liên hệ admin.";
-        }
+            try
+            {
+                await _mailService.SendEmailAsync(user.Email, "Xác nhận tài khoản SocialMini", mailBody);
+            }
+            catch (Exception ex)
+            {
+                // Lỗi gửi mail sẽ được Log trong EmailService rồi, 
+                // ở đây ta chỉ cần bắt exception để Task ngầm không làm crash app
+                Console.WriteLine($"Background Email Error: {ex.Message}");
+            }
+        });
 
         return "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.";
     }
