@@ -31,8 +31,8 @@ builder.Services.AddCors(options =>
                     "http://localhost:5173",
                     "http://127.0.0.1:5500",
                     "https://social-mini-app.onrender.com", 
-                    "https://socialminiweb.vercel.app", // Domain thực tế đang bị chặn
-                    "https://minisocial-iota.vercel.app", 
+                    "https://social-mini-fe.vercel.app", // Domain thực tế đang bị chặn
+                    "https://socialminiweb.vercel.app", 
                     "null"
                   )
                   .AllowAnyHeader()
