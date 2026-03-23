@@ -28,6 +28,8 @@ namespace MiniSocialNetwork.Models
         public string Email { get; set; } = string.Empty;
 
         public string? AvatarUrl { get; set; }
+        [MaxLength(255)]
+        public string? Bio { get; set; }
 
         public bool IsVerified { get; set; } = false;
         public bool IsActive { get; set; } = true;

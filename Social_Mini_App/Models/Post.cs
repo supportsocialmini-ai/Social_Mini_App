@@ -13,7 +13,8 @@ namespace Social_Mini_App.Models
         [Required]
         public Guid UserId { get; set; } // Người đăng bài (Khóa ngoại)
 
-        [Required]
+        [Required(ErrorMessage = "Nội dung bài viết không được để trống!")]
+        [MaxLength(5000, ErrorMessage = "Bài viết quá dài, tối đa 5000 ký tự thôi nè!")]
         public string PostContent { get; set; } = string.Empty; // Nội dung bài viết
 
         [Required]

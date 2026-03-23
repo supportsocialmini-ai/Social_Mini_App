@@ -45,6 +45,13 @@ namespace Social_Mini_App.Hubs
             if (!Guid.TryParse(Context.UserIdentifier, out var senderId))
                 return;
 
+            // Validate content length
+            if (string.IsNullOrWhiteSpace(content) || content.Length > 2000)
+            {
+                await Clients.Caller.SendAsync("ReceiveError", "Tin nhắn không hợp lệ hoặc quá dài (tối đa 2000 ký tự)!");
+                return;
+            }
+
             // Find or create conversation for 1-1 chat
             var conversationId = await _context.ConversationParticipants
                 .Where(cp => cp.UserId == senderId)

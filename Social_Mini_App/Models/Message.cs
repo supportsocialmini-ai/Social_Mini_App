@@ -15,7 +15,8 @@ namespace Social_Mini_App.Models
         [Required]
         public Guid ConversationId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Nội dung tin nhắn không được để trống!")]
+        [MaxLength(2000, ErrorMessage = "Tin nhắn quá dài, tối đa 2000 ký tự nhé!")]
         public string MessageContent { get; set; } = string.Empty;
 
         public bool IsRead { get; set; } = false;

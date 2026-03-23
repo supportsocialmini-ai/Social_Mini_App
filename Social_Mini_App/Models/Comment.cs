@@ -1,10 +1,13 @@
 using MiniSocialNetwork.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Social_Mini_App.Models
 {
     public class Comment
     {
         public Guid CommentId { get; set; }
+        [Required(ErrorMessage = "Nội dung bình luận không được để trống!")]
+        [MaxLength(1000, ErrorMessage = "Bình luận quá dài, tối đa 1000 ký tự thôi nhé!")]
         public string CommentContent { get; set; } = null!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }

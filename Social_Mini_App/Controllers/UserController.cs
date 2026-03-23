@@ -80,8 +80,9 @@ namespace Social_Mini_App.Controllers
             if (userInDb == null) return NotFound(ApiResponse<User>.Fail("Không thấy User"));
 
             userInDb.FullName = request.FullName;
-            userInDb.Email = request.Email;
-            userInDb.AvatarUrl = request.AvatarUrl;
+            if (!string.IsNullOrEmpty(request.Email)) userInDb.Email = request.Email;
+            if (!string.IsNullOrEmpty(request.AvatarUrl)) userInDb.AvatarUrl = request.AvatarUrl;
+            if (!string.IsNullOrEmpty(request.Bio)) userInDb.Bio = request.Bio;
 
             var result = await _userService.UpdateUserAsync(userInDb);
             if (result) 
