@@ -29,6 +29,12 @@ services:
         value: Social Mini Network
       - key: SendGrid__ApiKey
         sync: false
+      - key: GmailApi__ClientId
+        sync: false
+      - key: GmailApi__ClientSecret
+        sync: false
+      - key: GmailApi__RefreshToken
+        sync: false
 
 databases:
   - name: social-mini-db
