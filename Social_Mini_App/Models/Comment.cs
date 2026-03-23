@@ -6,7 +6,7 @@ namespace Social_Mini_App.Models
     {
         public Guid CommentId { get; set; }
         public string CommentContent { get; set; } = null!;
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
         // Quan hệ với User

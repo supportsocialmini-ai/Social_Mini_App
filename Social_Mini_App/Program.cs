@@ -28,10 +28,11 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(
                     "http://localhost:3000",
+                    "http://localhost:3001",
                     "http://localhost:5173",
                     "http://127.0.0.1:5500",
                     "https://social-mini-app.onrender.com", 
-                    "https://social-mini-fe.vercel.app", // Domain thực tế đang bị chặn
+                    "https://social-mini-fe.vercel.app",
                     "https://socialminiweb.vercel.app", 
                     "null"
                   )
@@ -59,8 +60,15 @@ builder.Services.AddDbContext<DataContext>(options =>
         var port = databaseUri.Port <= 0 ? 5432 : databaseUri.Port;
         connectionString = $"Host={databaseUri.Host};Port={port};Database={databaseUri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=True;";
     }
-    
-    options.UseNpgsql(connectionString);
+
+    if (!string.IsNullOrEmpty(connectionString) && (connectionString.Contains("Host=") || connectionString.Contains("Port=")))
+    {
+        options.UseNpgsql(connectionString);
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
 });
 // Add services to the container.
 builder.Services.AddScoped<INotificationService, NotificationService>();

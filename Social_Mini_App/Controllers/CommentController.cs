@@ -37,7 +37,7 @@ namespace Social_Mini_App.Controllers
                 CommentContent = request.Content,
                 ParentCommentId = request.ParentCommentId,
                 UserId = userId,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             };
 
             var result = await _commentService.CreateCommentAsync(comment);

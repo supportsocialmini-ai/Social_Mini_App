@@ -22,7 +22,7 @@ namespace Social_Mini_App.Models
 
         public string? ImageUrl { get; set; } // URL ảnh bài viết (null nếu không có ảnh)
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
         // Quan hệ: Một bài viết thuộc về một User

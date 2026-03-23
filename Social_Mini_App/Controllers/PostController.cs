@@ -39,7 +39,7 @@ namespace Social_Mini_App.Controllers
                 UserId = userId,
                 PostContent = uploadDto.Content,
                 Privacy = uploadDto.Privacy,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             };
 
             if (await _postService.CreatePostAsync(post))
@@ -61,7 +61,7 @@ namespace Social_Mini_App.Controllers
                 UserId = userId,
                 PostContent = uploadDto.Content,
                 Privacy = uploadDto.Privacy,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             };
 
             if (uploadDto.ImageFile != null && uploadDto.ImageFile.Length > 0)
