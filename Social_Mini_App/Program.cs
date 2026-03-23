@@ -144,21 +144,26 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Tự động chạy Migration khi khởi động (Xịn cho Render)
-using (var scope = app.Services.CreateScope())
+// Tự động chạy Migration ở chế độ chạy ngầm để không làm chậm quá trình Bind Port trên Render
+_ = Task.Run(() =>
 {
-    var services = scope.ServiceProvider;
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var context = services.GetRequiredService<DataContext>();
-        context.Database.Migrate();
+        var services = scope.ServiceProvider;
+        try
+        {
+            var context = services.GetRequiredService<DataContext>();
+            // Đợi 1 chút để app kịp bind port xong
+            Thread.Sleep(5000); 
+            context.Database.Migrate();
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "An error occurred while migrating the database.");
+        }
     }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
-    }
-}
+});
 
 // Configure the HTTP request pipeline.
 // Luôn bật Swagger để dễ debug khi deploy
