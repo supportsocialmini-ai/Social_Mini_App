@@ -16,7 +16,7 @@ namespace Social_Mini_App.Dtos.Requests
         public string FullName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = ValidatorMessages.EmailRequired)]
-        [RegularExpression(@"^[^\s@]+@[^\s@]+\.[^\s@]+$", ErrorMessage = ValidatorMessages.EmailInvalid)]
+        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = ValidatorMessages.EmailInvalid)]
         [MaxLength(255)]
         public string Email { get; set; } = string.Empty;
 

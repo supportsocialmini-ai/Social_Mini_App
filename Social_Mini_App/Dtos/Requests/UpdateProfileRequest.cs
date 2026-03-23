@@ -10,7 +10,7 @@ namespace Social_Mini_App.Dtos.Requests
         [StringLength(100, MinimumLength = 2, ErrorMessage = ValidatorMessages.FullNameLength)]
         public string FullName { get; set; } = string.Empty;
 
-        [RegularExpression(@"^[^\s@]+@[^\s@]+\.[^\s@]+$", ErrorMessage = ValidatorMessages.EmailInvalid)]
+        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = ValidatorMessages.EmailInvalid)]
         [MaxLength(255)]
         public string? Email { get; set; }
         public string? AvatarUrl { get; set; }
