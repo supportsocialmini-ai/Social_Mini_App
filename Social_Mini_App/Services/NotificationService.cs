@@ -4,6 +4,7 @@ using MiniSocialNetwork.Data;
 using Social_Mini_App.Hubs;
 using Social_Mini_App.Interfaces;
 using Social_Mini_App.Models;
+using Social_Mini_App.Messages;
 
 namespace Social_Mini_App.Services
 {
@@ -22,13 +23,14 @@ namespace Social_Mini_App.Services
         {
             if (senderId == receiverId) return;
  
-            var sender = await _context.Users.FindAsync(senderId);
-            string action = "";
-            
-            if (type == "Like") action = "đã thích bài viết của bạn.";
-            else if (type == "Comment") action = "đã bình luận vào bài viết của bạn.";
-            else if (type == "FriendRequest") action = "đã gửi lời mời kết bạn cho bạn.";
-            else if (type == "FriendAccept") action = "đã chấp nhận lời mời kết bạn.";
+            string actionKey = type switch
+            {
+                "Like" => NotificationMsg.Action.Like,
+                "Comment" => NotificationMsg.Action.Comment,
+                "FriendRequest" => NotificationMsg.Action.FriendRequest,
+                "FriendAccept" => NotificationMsg.Action.FriendAccept,
+                _ => type
+            };
  
             var notif = new Notification
             {
@@ -36,7 +38,7 @@ namespace Social_Mini_App.Services
                 ReceiverId = receiverId,
                 PostId = postId,
                 NotificationType = type,
-                Message = $"{sender?.FullName ?? sender?.Username} {action}",
+                Message = actionKey, // Store the KEY instead of the full sentence
                 CreatedAt = DateTime.Now,
                 IsRead = false
             };
@@ -44,17 +46,21 @@ namespace Social_Mini_App.Services
             _context.Notifications.Add(notif);
             await _context.SaveChangesAsync();
 
-            // Gửi thông báo realtime qua SignalR
-            await _hubContext.Clients.User(receiverId.ToString()).SendAsync("ReceiveNotification", notif.Message);
+            // Fetch sender again to get FullName for real-time notification
+            var sender = await _context.Users.FindAsync(senderId);
+
+            // Gửi "Mã thông báo|Tên người gửi" qua SignalR để FE dễ bóc tách
+            string signalRMsg = $"{actionKey}|{sender?.FullName ?? sender?.Username}";
+            await _hubContext.Clients.User(receiverId.ToString()).SendAsync("ReceiveNotification", signalRMsg);
         }
  
-        // Thêm hàm lấy danh sách thông báo để tí nữa FE gọi nhé
         public async Task<List<Notification>> GetNotificationsAsync(Guid userId)
         {
             return await _context.Notifications
+                .Include(n => n.Sender)
                 .Where(n => n.ReceiverId == userId)
                 .OrderByDescending(n => n.CreatedAt)
-                .Take(20) // Lấy 20 cái mới nhất thôi
+                .Take(20)
                 .ToListAsync();
         }
  

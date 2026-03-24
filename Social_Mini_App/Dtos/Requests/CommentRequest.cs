@@ -8,7 +8,7 @@ namespace Social_Mini_App.Dtos.Requests
         public Guid PostId { get; set; }
 
         [Required(ErrorMessage = CommentMsg.Validation.ContentRequired)]
-        [MaxLength(1000, ErrorMessage = CommentMsg.Validation.CommentTooLong)]
+        [MaxLength(200, ErrorMessage = CommentMsg.Validation.CommentTooLong)]
         public string Content { get; set; } = string.Empty;
         public Guid? ParentCommentId { get; set; }
     }

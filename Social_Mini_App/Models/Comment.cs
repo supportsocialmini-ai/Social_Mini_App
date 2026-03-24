@@ -7,7 +7,7 @@ namespace Social_Mini_App.Models
     {
         public Guid CommentId { get; set; }
         [Required(ErrorMessage = "Nội dung bình luận không được để trống!")]
-        [MaxLength(1000, ErrorMessage = "Bình luận quá dài, tối đa 1000 ký tự thôi nhé!")]
+        [MaxLength(200, ErrorMessage = "Bình luận quá dài, tối đa 200 ký tự thôi nhé!")]
         public string CommentContent { get; set; } = null!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }

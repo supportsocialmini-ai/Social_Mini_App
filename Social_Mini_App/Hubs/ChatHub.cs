@@ -46,9 +46,9 @@ namespace Social_Mini_App.Hubs
                 return;
 
             // Validate content length
-            if (string.IsNullOrWhiteSpace(content) || content.Length > 2000)
+            if (string.IsNullOrWhiteSpace(content) || content.Length > 500)
             {
-                await Clients.Caller.SendAsync("ReceiveError", "Tin nhắn không hợp lệ hoặc quá dài (tối đa 2000 ký tự)!");
+                await Clients.Caller.SendAsync("ReceiveError", "Tin nhắn không hợp lệ hoặc quá dài (tối đa 500 ký tự)!");
                 return;
             }
 
