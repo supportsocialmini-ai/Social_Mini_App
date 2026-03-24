@@ -6,6 +6,7 @@ using Social_Mini_App.Dtos.Requests;
 using Social_Mini_App.Models;
 using MiniSocialNetwork.Wrappers;
 using System.Security.Claims;
+using Social_Mini_App.Messages;
 
 namespace Social_Mini_App.Controllers
 {
@@ -43,7 +44,7 @@ namespace Social_Mini_App.Controllers
             var result = await _commentService.CreateCommentAsync(comment);
 
             if (result != null) return Ok(ApiResponse<CommentResponse>.Ok(result));
-            return BadRequest(ApiResponse<CommentResponse>.Fail("Không thể đăng bình luận lúc này mày ơi!"));
+            return BadRequest(ApiResponse<CommentResponse>.Fail(CommentMsg.Upsert.CreateFail));
         }
 
         [HttpDelete("{id}")]
@@ -55,9 +56,9 @@ namespace Social_Mini_App.Controllers
 
             if (await _commentService.DeleteCommentAsync(id, userId))
             {
-                return Ok(ApiResponse<string>.Ok("Đã xóa bình luận thành công!"));
+                return Ok(ApiResponse<string>.Ok(CommentMsg.Delete.Success));
             }
-            return BadRequest(ApiResponse<string>.Fail("Mày không có quyền xóa hoặc bình luận không tồn tại!"));
+            return BadRequest(ApiResponse<string>.Fail(CommentMsg.Delete.Fail));
         }
     }
 }

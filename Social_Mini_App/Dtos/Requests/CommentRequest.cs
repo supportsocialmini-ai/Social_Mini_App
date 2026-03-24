@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Social_Mini_App.Constants;
+using Social_Mini_App.Messages;
 
 namespace Social_Mini_App.Dtos.Requests
 {
@@ -7,8 +7,8 @@ namespace Social_Mini_App.Dtos.Requests
     {
         public Guid PostId { get; set; }
 
-        [Required(ErrorMessage = ValidatorMessages.ContentRequired)]
-        [MaxLength(1000, ErrorMessage = ValidatorMessages.CommentTooLong)]
+        [Required(ErrorMessage = CommentMsg.Validation.ContentRequired)]
+        [MaxLength(1000, ErrorMessage = CommentMsg.Validation.CommentTooLong)]
         public string Content { get; set; } = string.Empty;
         public Guid? ParentCommentId { get; set; }
     }

@@ -83,6 +83,35 @@ namespace MiniSocialNetwork.Services
             }
         }
 
+        public async Task SendTemplateEmailAsync(string to, string subject, string templateName, Dictionary<string, string> placeholders)
+        {
+            string body;
+            try
+            {
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "EmailTemplates", $"{templateName}.html");
+                if (File.Exists(templatePath))
+                {
+                    body = await File.ReadAllTextAsync(templatePath);
+                    foreach (var placeholder in placeholders)
+                    {
+                        body = body.Replace($"{{{placeholder.Key}}}", placeholder.Value);
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Email template {TemplateName} not found at {TemplatePath}", templateName, templatePath);
+                    body = string.Join(", ", placeholders.Select(p => $"{p.Key}: {p.Value}"));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reading or parsing email template {TemplateName}", templateName);
+                body = string.Join(", ", placeholders.Select(p => $"{p.Key}: {p.Value}"));
+            }
+
+            await SendEmailAsync(to, subject, body);
+        }
+
         private string Base64UrlEncode(string input)
         {
             var inputBytes = Encoding.UTF8.GetBytes(input);

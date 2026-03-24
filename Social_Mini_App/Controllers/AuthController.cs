@@ -4,6 +4,7 @@ using MiniSocialNetwork.Interfaces;
 using MiniSocialNetwork.Models;
 using MiniSocialNetwork.Wrappers;
 using Social_Mini_App.Dtos.Requests;
+using Social_Mini_App.Messages;
 
 namespace Social_Mini_App.Controllers
 {
@@ -27,7 +28,7 @@ namespace Social_Mini_App.Controllers
 
             var result = await _authService.RegisterAsync(user, request.Password);
 
-            if (result.Contains("thành công"))
+            if (result == AuthMsg.Register.Success)
                 return Ok(ApiResponse<string>.Ok(result));
 
             return BadRequest(ApiResponse<string>.Fail(result));
@@ -40,7 +41,7 @@ namespace Social_Mini_App.Controllers
             {
                 var token = await _authService.LoginAsync(request.Username, request.Password);
                 if (token == null)
-                    return BadRequest(ApiResponse<string>.Fail("Tài khoản hoặc mật khẩu sai!"));
+                    return BadRequest(ApiResponse<string>.Fail(AuthMsg.Login.Fail));
 
                 return Ok(ApiResponse<string>.Ok(token));
             }
@@ -55,9 +56,9 @@ namespace Social_Mini_App.Controllers
         {
             var result = await _authService.VerifyEmailAsync(token);
             if (result)
-                return Ok(ApiResponse<string>.Ok("Xác nhận Email thành công! Bạn có thể đăng nhập."));
+                return Ok(ApiResponse<string>.Ok(AuthMsg.Verify.Success));
 
-            return BadRequest(ApiResponse<string>.Fail("Mã xác nhận không hợp lệ hoặc đã hết hạn."));
+            return BadRequest(ApiResponse<string>.Fail(AuthMsg.Verify.Fail));
         }
 
         [Authorize]
@@ -66,13 +67,13 @@ namespace Social_Mini_App.Controllers
         {
             var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
-                return Unauthorized(ApiResponse<string>.Fail("Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại."));
+                return Unauthorized(ApiResponse<string>.Fail(UserMsg.Profile.Unauthorized));
 
             var result = await _authService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword);
             if (result)
-                return Ok(ApiResponse<string>.Ok("Đổi mật khẩu thành công!"));
+                return Ok(ApiResponse<string>.Ok(AuthMsg.Password.ChangeSuccess));
 
-            return BadRequest(ApiResponse<string>.Fail("Mật khẩu cũ không chính xác hoặc có lỗi xảy ra."));
+            return BadRequest(ApiResponse<string>.Fail(AuthMsg.Password.ChangeFail));
         }
 
         [Authorize]
@@ -81,13 +82,13 @@ namespace Social_Mini_App.Controllers
         {
             var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
-                return Unauthorized(ApiResponse<bool>.Fail("Unauthorized"));
+                return Unauthorized(ApiResponse<bool>.Fail(UserMsg.Profile.Unauthorized));
 
             var result = await _authService.VerifyPasswordAsync(userId, request.Password);
             if (result)
-                return Ok(ApiResponse<string>.Ok("Xác nhận mật khẩu đúng."));
+                return Ok(ApiResponse<string>.Ok(AuthMsg.Password.VerifySuccess));
 
-            return BadRequest(ApiResponse<string>.Fail("Mật khẩu không chính xác."));
+            return BadRequest(ApiResponse<string>.Fail(AuthMsg.Password.VerifyFail));
         }
     }
 }

@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.IO;
+using Social_Mini_App.Messages;
 
 public class AuthService : IAuthService
 {
@@ -25,10 +26,10 @@ public class AuthService : IAuthService
     public async Task<string> RegisterAsync(User user, string password)
     {
         if (await _context.Users.AnyAsync(u => u.Username == user.Username))
-            return "Tên đăng nhập đã tồn tại!";
+            return AuthMsg.Register.UserExists;
 
         if (await _context.Users.AnyAsync(u => u.Email == user.Email))
-            return "Email đã được sử dụng!";
+            return AuthMsg.Register.EmailExists;
 
         // Lấy password từ tham số truyền vào để hash
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
@@ -51,33 +52,22 @@ public class AuthService : IAuthService
                 var frontendUrl = _configuration["AppSettings:FrontendUrl"] ?? "http://localhost:3000";
                 var verificationUrl = $"{frontendUrl.TrimEnd('/')}/verify-email?token={user.VerificationToken}";
                 
-                // Đọc template từ file
-                string mailBody;
-                try 
+                var placeholders = new Dictionary<string, string>
                 {
-                    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "EmailTemplates", "VerifyEmail.html");
-                    mailBody = File.ReadAllText(templatePath);
-                    mailBody = mailBody.Replace("{FullName}", user.FullName)
-                                       .Replace("{VerificationUrl}", verificationUrl)
-                                       .Replace("{VerificationToken}", user.VerificationToken);
-                }
-                catch (Exception)
-                {
-                    // Fallback nếu không đọc được file
-                    mailBody = $"Chào {user.FullName}, mã xác nhận của bạn là: {user.VerificationToken}. Hoặc nhấn vào link: {verificationUrl}";
-                }
+                    { "FullName", user.FullName },
+                    { "VerificationUrl", verificationUrl },
+                    { "VerificationToken", user.VerificationToken ?? "" }
+                };
 
-                await _mailService.SendEmailAsync(user.Email, "Xác nhận tài khoản SocialMini", mailBody);
+                await _mailService.SendTemplateEmailAsync(user.Email, "Xác nhận tài khoản SocialMini", "VerifyEmail", placeholders);
             }
             catch (Exception ex)
             {
-                // Lỗi gửi mail sẽ được Log trong EmailService rồi, 
-                // ở đây ta chỉ cần bắt exception để Task ngầm không làm crash app
                 Console.WriteLine($"Background Email Error: {ex.Message}");
             }
         });
 
-        return "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.";
+        return AuthMsg.Register.Success;
     }
 
     public async Task<string?> LoginAsync(string username, string password)
@@ -87,7 +77,7 @@ public class AuthService : IAuthService
             return null;
 
         if (!user.IsActive)
-            throw new Exception("USER_NOT_VERIFIED");
+            throw new Exception(AuthMsg.Login.UserNotVerified);
 
         return CreateToken(user);
     }

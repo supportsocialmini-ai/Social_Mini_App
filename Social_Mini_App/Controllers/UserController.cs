@@ -7,6 +7,7 @@ using Social_Mini_App.Dtos.Requests;
 using Social_Mini_App.Interfaces;
 using Social_Mini_App.Models;
 using System.Security.Claims;
+using Social_Mini_App.Messages;
 
 namespace Social_Mini_App.Controllers
 {
@@ -35,12 +36,12 @@ namespace Social_Mini_App.Controllers
             var userId = GetCurrentUserId();
 
             if (userId == Guid.Empty)
-                return Unauthorized(ApiResponse<User>.Fail("Mày chưa đăng nhập hoặc Token lỏ!"));
+                return Unauthorized(ApiResponse<User>.Fail(UserMsg.Profile.Unauthorized));
 
             var user = await _userService.GetUserByIdAsync(userId);
 
             if (user == null) 
-                return NotFound(ApiResponse<User>.Fail("Không thấy user này!"));
+                return NotFound(ApiResponse<User>.Fail(UserMsg.Profile.NotFound));
 
             return Ok(ApiResponse<User>.Ok(user));
         }
@@ -50,7 +51,7 @@ namespace Social_Mini_App.Controllers
         {
             var user = await _userService.GetUserByIdAsync(userId);
             if (user == null) 
-                return NotFound(ApiResponse<User>.Fail("Không tìm thấy người dùng này!"));
+                return NotFound(ApiResponse<User>.Fail(UserMsg.Profile.NotFound));
 
             return Ok(ApiResponse<User>.Ok(user));
         }
@@ -77,7 +78,7 @@ namespace Social_Mini_App.Controllers
             if (userId == Guid.Empty) return Unauthorized(ApiResponse<User>.Fail("Unauthorized"));
 
             var userInDb = await _userService.GetUserByIdAsync(userId);
-            if (userInDb == null) return NotFound(ApiResponse<User>.Fail("Không thấy User"));
+            if (userInDb == null) return NotFound(ApiResponse<User>.Fail(UserMsg.Profile.NotFound));
 
             userInDb.FullName = request.FullName;
             if (!string.IsNullOrEmpty(request.Email)) userInDb.Email = request.Email;
@@ -88,7 +89,7 @@ namespace Social_Mini_App.Controllers
             if (result) 
                 return Ok(ApiResponse<User>.Ok(userInDb));
                 
-            return BadRequest(ApiResponse<User>.Fail("Không có gì thay đổi hoặc lỗi DB"));
+            return BadRequest(ApiResponse<User>.Fail(UserMsg.Profile.UpdateFail));
         }
 
         [HttpPost("avatar")]
@@ -98,11 +99,11 @@ namespace Social_Mini_App.Controllers
             if (string.IsNullOrEmpty(userIdStr)) return Unauthorized(ApiResponse<object>.Fail("Unauthorized"));
 
             if (file == null || file.Length == 0)
-                return BadRequest(ApiResponse<object>.Fail("Không có file ảnh!"));
+                return BadRequest(ApiResponse<object>.Fail(UserMsg.Avatar.FileRequired));
 
             var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
             if (!allowedTypes.Contains(file.ContentType.ToLower()))
-                return BadRequest(ApiResponse<object>.Fail("Chỉ hỗ trợ file ảnh (jpg, png, gif, webp)!"));
+                return BadRequest(ApiResponse<object>.Fail(UserMsg.Avatar.InvalidType));
 
             var avatarDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
             Directory.CreateDirectory(avatarDir);

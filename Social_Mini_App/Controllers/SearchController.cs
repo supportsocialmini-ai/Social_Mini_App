@@ -6,6 +6,7 @@ using Social_Mini_App.Interfaces;
 using Social_Mini_App.Models;
 using Social_Mini_App.Dtos;
 using System.Security.Claims;
+using Social_Mini_App.Messages;
 
 namespace Social_Mini_App.Controllers
 {
@@ -25,7 +26,7 @@ namespace Social_Mini_App.Controllers
         public async Task<IActionResult> Search([FromQuery] string q)
         {
             if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
-                return BadRequest(ApiResponse<SearchResultResponse>.Fail("Từ khóa tìm kiếm phải ít nhất 2 ký tự!"));
+                return BadRequest(ApiResponse<SearchResultResponse>.Fail(SearchMsg.Query.TooShort));
 
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             Guid currentUserId = Guid.Empty;

@@ -5,6 +5,7 @@ using MiniSocialNetwork.Data;
 using MiniSocialNetwork.Wrappers;
 using Social_Mini_App.Hubs;
 using Social_Mini_App.Models;
+using Social_Mini_App.Messages;
 using System.Security.Claims;
 
 [Authorize]
@@ -20,7 +21,7 @@ public class ChatController : ControllerBase
     {
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId)) 
-            return Unauthorized(ApiResponse<List<Message>>.Fail("Unauthorized"));
+            return Unauthorized(ApiResponse<List<Message>>.Fail(UserMsg.Profile.Unauthorized));
 
         // Find or create conversation for 1-1 chat
         var conversationId = await _context.ConversationParticipants
@@ -53,7 +54,7 @@ public class ChatController : ControllerBase
     {
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId)) 
-            return Unauthorized(ApiResponse<object>.Fail("Unauthorized"));
+            return Unauthorized(ApiResponse<object>.Fail(UserMsg.Profile.Unauthorized));
 
         var users = await _context.Users
             .Where(u => u.UserId != currentUserId)
@@ -74,7 +75,7 @@ public class ChatController : ControllerBase
     {
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId)) 
-            return Unauthorized(ApiResponse<int>.Fail("Unauthorized"));
+            return Unauthorized(ApiResponse<int>.Fail(UserMsg.Profile.Unauthorized));
 
         var count = await _context.ConversationParticipants
             .Where(cp => cp.UserId == currentUserId)
@@ -92,7 +93,7 @@ public class ChatController : ControllerBase
     {
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId)) 
-            return Unauthorized(ApiResponse<object>.Fail("Unauthorized"));
+            return Unauthorized(ApiResponse<object>.Fail(UserMsg.Profile.Unauthorized));
 
         var counts = await _context.ConversationParticipants
             .Where(cp => cp.UserId == currentUserId)
@@ -112,7 +113,7 @@ public class ChatController : ControllerBase
     {
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId)) 
-            return Unauthorized(ApiResponse<string>.Fail("Unauthorized"));
+            return Unauthorized(ApiResponse<string>.Fail(UserMsg.Profile.Unauthorized));
 
         var conversationId = await _context.ConversationParticipants
             .Where(cp => cp.UserId == currentUserId)
@@ -138,7 +139,7 @@ public class ChatController : ControllerBase
             }
         }
 
-        return Ok(ApiResponse<string>.Ok("Success"));
+        return Ok(ApiResponse<string>.Ok(ChatMsg.Action.ReadSuccess));
     }
 
     [HttpGet("online-users")]
@@ -157,7 +158,7 @@ public class ChatController : ControllerBase
     public async Task<IActionResult> UploadImage(IFormFile file)
     {
         if (file == null || file.Length == 0)
-            return BadRequest(ApiResponse<string>.Fail("File is empty"));
+            return BadRequest(ApiResponse<string>.Fail(UserMsg.Avatar.FileRequired));
 
         try
         {
@@ -180,7 +181,7 @@ public class ChatController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(ApiResponse<string>.Fail($"Error uploading image: {ex.Message}"));
+            return BadRequest(ApiResponse<string>.Fail(ChatMsg.Upload.Fail, ex.Message));
         }
     }
 }

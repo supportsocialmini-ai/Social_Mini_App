@@ -6,6 +6,7 @@ using Social_Mini_App.Dtos.Responses;
 using Social_Mini_App.Interfaces;
 using Social_Mini_App.Models;
 using System.Security.Claims;
+using Social_Mini_App.Messages;
 
 namespace Social_Mini_App.Controllers
 {
@@ -22,9 +23,9 @@ namespace Social_Mini_App.Controllers
         {
             var requesterId = GetCurrentUserId();
             if (await _friendService.SendFriendRequestAsync(requesterId, addresseeId))
-                return Ok(ApiResponse<string>.Ok("Gửi lời mời kết bạn thành công!"));
+                return Ok(ApiResponse<string>.Ok(FriendMsg.Request.Success));
                 
-            return BadRequest(ApiResponse<string>.Fail("Không thể gửi lời mời kết bạn. Có thể đã gửi rồi hoặc lỗi hệ thống."));
+            return BadRequest(ApiResponse<string>.Fail(FriendMsg.Request.Fail));
         }
 
         [HttpPost("accept/{requestId}")]
@@ -32,9 +33,9 @@ namespace Social_Mini_App.Controllers
         {
             var userId = GetCurrentUserId();
             if (await _friendService.AcceptFriendRequestAsync(requestId, userId))
-                return Ok(ApiResponse<string>.Ok("Đã chấp nhận lời mời kết bạn!"));
+                return Ok(ApiResponse<string>.Ok(FriendMsg.Action.AcceptSuccess));
                 
-            return BadRequest(ApiResponse<string>.Fail("Không thể chấp nhận lời mời."));
+            return BadRequest(ApiResponse<string>.Fail(FriendMsg.Action.AcceptFail));
         }
 
         [HttpPost("decline/{requestId}")]
@@ -42,9 +43,9 @@ namespace Social_Mini_App.Controllers
         {
             var userId = GetCurrentUserId();
             if (await _friendService.DeclineFriendRequestAsync(requestId, userId))
-                return Ok(ApiResponse<string>.Ok("Đã từ chối lời mời kết bạn."));
+                return Ok(ApiResponse<string>.Ok(FriendMsg.Action.DeclineSuccess));
                 
-            return BadRequest(ApiResponse<string>.Fail("Không thể từ chối lời mời."));
+            return BadRequest(ApiResponse<string>.Fail(FriendMsg.Action.DeclineFail));
         }
 
         [HttpDelete("unfriend/{friendId}")]
@@ -52,9 +53,9 @@ namespace Social_Mini_App.Controllers
         {
             var userId = GetCurrentUserId();
             if (await _friendService.UnfriendAsync(userId, friendId))
-                return Ok(ApiResponse<string>.Ok("Đã hủy kết bạn."));
+                return Ok(ApiResponse<string>.Ok(FriendMsg.Action.UnfriendSuccess));
                 
-            return BadRequest(ApiResponse<string>.Fail("Không thể hủy kết bạn."));
+            return BadRequest(ApiResponse<string>.Fail(FriendMsg.Action.UnfriendFail));
         }
 
         [HttpDelete("cancel/{requestId}")]
@@ -62,9 +63,9 @@ namespace Social_Mini_App.Controllers
         {
             var userId = GetCurrentUserId();
             if (await _friendService.CancelFriendRequestAsync(userId, requestId))
-                return Ok(ApiResponse<string>.Ok("Đã hủy lời mời kết bạn."));
+                return Ok(ApiResponse<string>.Ok(FriendMsg.Action.CancelSuccess));
                 
-            return BadRequest(ApiResponse<string>.Fail("Không thể hủy lời mời."));
+            return BadRequest(ApiResponse<string>.Fail(FriendMsg.Action.CancelFail));
         }
 
         [HttpGet("list")]

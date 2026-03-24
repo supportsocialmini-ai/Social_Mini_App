@@ -7,6 +7,7 @@ using Social_Mini_App.Dtos.Responses;
 using Social_Mini_App.Interfaces;
 using Social_Mini_App.Models;
 using System.Security.Claims;
+using Social_Mini_App.Messages;
 
 namespace Social_Mini_App.Controllers
 {
@@ -43,9 +44,9 @@ namespace Social_Mini_App.Controllers
             };
 
             if (await _postService.CreatePostAsync(post))
-                return Ok(ApiResponse<string>.Ok("Đăng bài thành công!"));
+                return Ok(ApiResponse<string>.Ok(PostMsg.Upsert.CreateSuccess));
 
-            return BadRequest(ApiResponse<string>.Fail("Lỗi khi đăng bài mày ơi."));
+            return BadRequest(ApiResponse<string>.Fail(PostMsg.Upsert.CreateFail));
         }
 
         // 2b. THÊM BÀI MỚI VỚI HÌNH ẢNH
@@ -86,14 +87,14 @@ namespace Social_Mini_App.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return BadRequest(ApiResponse<string>.Fail($"Lỗi khi upload ảnh: {ex.Message}"));
+                    return BadRequest(ApiResponse<string>.Fail(PostMsg.Upsert.ImageUploadFail, ex.Message));
                 }
             }
 
             if (await _postService.CreatePostAsync(post)) 
-                return Ok(ApiResponse<string>.Ok("Đăng bài thành công!"));
+                return Ok(ApiResponse<string>.Ok(PostMsg.Upsert.CreateSuccess));
                 
-            return BadRequest(ApiResponse<string>.Fail("Lỗi khi đăng bài mày ơi."));
+            return BadRequest(ApiResponse<string>.Fail(PostMsg.Upsert.CreateFail));
         }
 
         // 3. SỬA BÀI
@@ -104,7 +105,7 @@ namespace Social_Mini_App.Controllers
             var postInDb = await _postService.GetPostByIdAsync(id);
 
             if (postInDb == null)
-                return NotFound(ApiResponse<string>.Fail("Bài này không tồn tại", "POST_NOT_FOUND"));
+                return NotFound(ApiResponse<string>.Fail(PostMsg.Get.NotFound));
 
             if (postInDb.UserId != userId)
                 return Forbid();
@@ -112,9 +113,9 @@ namespace Social_Mini_App.Controllers
             postInDb.PostContent = request.Content;
 
             if (await _postService.UpdatePostAsync(postInDb))
-                return Ok(ApiResponse<string>.Ok("Cập nhật xong!"));
+                return Ok(ApiResponse<string>.Ok(PostMsg.Upsert.UpdateSuccess));
 
-            return BadRequest(ApiResponse<string>.Fail("Lỗi khi lưu bài."));
+            return BadRequest(ApiResponse<string>.Fail(PostMsg.Upsert.UpdateFail));
         }
 
         // 4. XÓA BÀI
@@ -131,9 +132,9 @@ namespace Social_Mini_App.Controllers
                 return Forbid();
 
             if (await _postService.DeletePostAsync(id)) 
-                return Ok(ApiResponse<string>.Ok("Đã xóa bài!"));
+                return Ok(ApiResponse<string>.Ok(PostMsg.Delete.Success));
                 
-            return BadRequest(ApiResponse<string>.Fail("Lỗi khi xóa bài."));
+            return BadRequest(ApiResponse<string>.Fail(PostMsg.Delete.Fail));
         }
 
         // 5. LẤY BÀI VIẾT CỦA CHÍNH TÔI
