@@ -69,7 +69,7 @@ namespace Social_Mini_App.Controllers
             {
                 try
                 {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "posts");
                     if (!Directory.Exists(uploadsFolder))
                     {
                         Directory.CreateDirectory(uploadsFolder);
@@ -83,7 +83,7 @@ namespace Social_Mini_App.Controllers
                         await uploadDto.ImageFile.CopyToAsync(stream);
                     }
 
-                    post.ImageUrl = $"/images/{fileName}";
+                    post.ImageUrl = $"/images/posts/{fileName}";
                 }
                 catch (Exception ex)
                 {

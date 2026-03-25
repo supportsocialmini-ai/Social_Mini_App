@@ -45,8 +45,11 @@ namespace Social_Mini_App.Hubs
             if (!Guid.TryParse(Context.UserIdentifier, out var senderId))
                 return;
 
-            // Validate content length
-            if (string.IsNullOrWhiteSpace(content) || content.Length > 500)
+            // Validate content length and presence
+            bool hasContent = !string.IsNullOrWhiteSpace(content);
+            bool hasImage = !string.IsNullOrWhiteSpace(imageUrl);
+
+            if ((!hasContent && !hasImage) || (hasContent && content.Length > 500))
             {
                 await Clients.Caller.SendAsync("ReceiveError", "Tin nhắn không hợp lệ hoặc quá dài (tối đa 500 ký tự)!");
                 return;
