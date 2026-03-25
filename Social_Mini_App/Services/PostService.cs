@@ -11,13 +11,20 @@ namespace Social_Mini_App.Services
         private readonly DataContext _context;
         public PostService(DataContext context) => _context = context;
 
-        // 1. Lấy Newsfeed (Có LikeCount và IsLiked)
+        // 1. Lấy Newsfeed (Có LikeCount và IsLiked) - Đã lọc theo Privacy
         public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId)
         {
-            return await _context.Posts
+            var friendsIds = await GetFriendsIdsAsync(currentUserId);
+
+            var query = _context.Posts
                 .Include(p => p.User)
                 .Include(p => p.Likes)
-                .Include(p => p.Comments) // Đừng quên Include bảng Comments nhé
+                .Include(p => p.Comments)
+                .Where(p => p.UserId == currentUserId 
+                         || p.Privacy == "Public" 
+                         || (p.Privacy == "Friends" && friendsIds.Contains(p.UserId)));
+
+            return await query
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new PostResponse
                 {
@@ -28,16 +35,15 @@ namespace Social_Mini_App.Services
                     FullName = p.User!.FullName ?? p.User.Username,
                     AvatarUrl = p.User.AvatarUrl,
                     ImageUrl = p.ImageUrl,
+                    Privacy = p.Privacy,
                     LikeCount = p.Likes.Count(),
                     IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
-
-                    // ĐẾM SỐ BÌNH LUẬN Ở ĐÂY KKK
                     CommentCount = p.Comments.Count()
                 })
                 .ToListAsync();
         }
 
-        // 2. Lấy MyPosts (Cũng phải trả về PostResponse để UI hiển thị được Like)
+        // 2. Lấy bài viết của CHÍNH TÔI (Thấy hết)
         public async Task<List<PostResponse>> GetMyPostsAsync(Guid userId, Guid currentUserId)
         {
             return await _context.Posts
@@ -55,22 +61,33 @@ namespace Social_Mini_App.Services
                     FullName = p.User!.FullName ?? p.User.Username,
                     AvatarUrl = p.User.AvatarUrl,
                     ImageUrl = p.ImageUrl,
+                    Privacy = p.Privacy,
                     LikeCount = p.Likes.Count(),
-                    // SỬA CHỖ NÀY: Dùng currentUserId cho đồng bộ với Newsfeed
                     IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
                     CommentCount = p.Comments.Count()
                 })
                 .ToListAsync();
         }
 
-        // 3. Lấy bài viết của người khác theo ID
+        // 3. Lấy bài viết của người khác (Đã lọc theo Privacy)
         public async Task<List<PostResponse>> GetPostsByUserIdAsync(Guid userId, Guid currentUserId)
         {
+            var isFriend = await _context.FriendshipMembers
+                .Where(fm => fm.UserId == currentUserId)
+                .Join(_context.Friendships.Where(f => f.Status == "Accepted"),
+                      fm => fm.FriendshipId,
+                      f => f.FriendshipId,
+                      (fm, f) => fm.FriendshipId)
+                .AnyAsync(fid => _context.FriendshipMembers.Any(fm2 => fm2.FriendshipId == fid && fm2.UserId == userId));
+
             return await _context.Posts
                 .Include(p => p.User)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
                 .Where(p => p.UserId == userId)
+                .Where(p => p.UserId == currentUserId 
+                         || p.Privacy == "Public" 
+                         || (p.Privacy == "Friends" && isFriend))
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new PostResponse
                 {
@@ -81,6 +98,7 @@ namespace Social_Mini_App.Services
                     FullName = p.User!.FullName ?? p.User.Username,
                     AvatarUrl = p.User.AvatarUrl,
                     ImageUrl = p.ImageUrl,
+                    Privacy = p.Privacy,
                     LikeCount = p.Likes.Count(),
                     IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
                     CommentCount = p.Comments.Count()
@@ -88,26 +106,17 @@ namespace Social_Mini_App.Services
                 .ToListAsync();
         }
 
-        private async Task<List<PostResponse>> GetPostsInternal(IQueryable<Post> query, Guid currentUserId)
+        private async Task<List<Guid>> GetFriendsIdsAsync(Guid userId)
         {
-            return await query
-                .Include(p => p.User)
-                .Include(p => p.Likes)
-                .Include(p => p.Comments)
-                .OrderByDescending(p => p.CreatedAt)
-                .Select(p => new PostResponse
-                {
-                    PostId = p.PostId,
-                    PostContent = p.PostContent,
-                    CreatedAt = p.CreatedAt,
-                    UserId = p.UserId,
-                    FullName = p.User!.FullName ?? p.User.Username,
-                    AvatarUrl = p.User.AvatarUrl,
-                    ImageUrl = p.ImageUrl,
-                    LikeCount = p.Likes.Count(),
-                    IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
-                    CommentCount = p.Comments.Count()
-                })
+            return await _context.FriendshipMembers
+                .Where(fm => fm.UserId == userId)
+                .Join(_context.Friendships.Where(f => f.Status == "Accepted"),
+                      fm => fm.FriendshipId,
+                      f => f.FriendshipId,
+                      (fm, f) => f.FriendshipId)
+                .SelectMany(fid => _context.FriendshipMembers
+                    .Where(fm2 => fm2.FriendshipId == fid && fm2.UserId != userId)
+                    .Select(fm2 => fm2.UserId))
                 .ToListAsync();
         }
 

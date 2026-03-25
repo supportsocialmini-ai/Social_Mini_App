@@ -111,6 +111,7 @@ namespace Social_Mini_App.Controllers
                 return Forbid();
 
             postInDb.PostContent = request.Content;
+            postInDb.Privacy = request.Privacy;
 
             if (await _postService.UpdatePostAsync(postInDb))
                 return Ok(ApiResponse<string>.Ok(PostMsg.Upsert.UpdateSuccess));

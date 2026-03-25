@@ -9,6 +9,7 @@ namespace Social_Mini_App.Dtos.Responses
         public string FullName { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
         public string? ImageUrl { get; set; } // Ảnh bài viết
+        public string Privacy { get; set; } = "Public";
         public int LikeCount { get; set; } // Tổng số like
         public bool IsLiked { get; set; } // Thằng đang xem đã like chưa?
         public string? FirstLikeName { get; set; }

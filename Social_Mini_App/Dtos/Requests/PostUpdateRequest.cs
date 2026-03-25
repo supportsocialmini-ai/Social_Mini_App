@@ -8,5 +8,6 @@ namespace Social_Mini_App.Dtos.Requests
         [Required(ErrorMessage = PostMsg.Validation.ContentRequired)]
         [MaxLength(1000, ErrorMessage = PostMsg.Validation.PostTooLong)]
         public string Content { get; set; } = string.Empty;
+        public string Privacy { get; set; } = "Public";
     }
 }
