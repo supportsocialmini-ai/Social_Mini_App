@@ -34,6 +34,8 @@ namespace MiniSocialNetwork.Models
         public bool IsVerified { get; set; } = false;
         public bool IsActive { get; set; } = true;
         public string? VerificationToken { get; set; }
+        public string? PasswordResetToken { get; set; }
+        public DateTime? ResetTokenExpires { get; set; }
 
         // Ẩn luôn CreatedAt vì Server tự gán giờ hệ thống
         [JsonIgnore]

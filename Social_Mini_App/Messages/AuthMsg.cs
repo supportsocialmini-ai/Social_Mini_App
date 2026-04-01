@@ -27,6 +27,10 @@ public static class AuthMsg
         public const string ChangeFail = "Auth.Password.ChangeFail";
         public const string VerifySuccess = "Auth.Password.VerifySuccess";
         public const string VerifyFail = "Auth.Password.VerifyFail";
+        public const string ForgotEmailSent = "Auth.Password.ForgotEmailSent";
+        public const string UserNotFound = "Auth.Password.UserNotFound";
+        public const string ResetSuccess = "Auth.Password.ResetSuccess";
+        public const string InvalidToken = "Auth.Password.InvalidToken";
     }
 
     public struct Validation

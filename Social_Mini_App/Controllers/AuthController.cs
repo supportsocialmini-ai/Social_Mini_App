@@ -90,5 +90,25 @@ namespace Social_Mini_App.Controllers
 
             return BadRequest(ApiResponse<string>.Fail(AuthMsg.Password.VerifyFail));
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            var result = await _authService.ForgotPasswordAsync(request.Email);
+            if (result == AuthMsg.Password.ForgotEmailSent)
+                return Ok(ApiResponse<string>.Ok(result));
+            
+            return BadRequest(ApiResponse<string>.Fail(result));
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var result = await _authService.ResetPasswordAsync(request.Token, request.NewPassword);
+            if (result)
+                return Ok(ApiResponse<string>.Ok(AuthMsg.Password.ResetSuccess));
+            
+            return BadRequest(ApiResponse<string>.Fail(AuthMsg.Password.InvalidToken));
+        }
     }
 }

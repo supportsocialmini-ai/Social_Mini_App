@@ -115,6 +115,49 @@ public class AuthService : IAuthService
         return true;
     }
 
+    public async Task<string> ForgotPasswordAsync(string email)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (user == null) return AuthMsg.Password.UserNotFound;
+
+        user.PasswordResetToken = Random.Shared.Next(100000, 1000000).ToString();
+        user.ResetTokenExpires = DateTime.Now.AddHours(1);
+
+        await _context.SaveChangesAsync();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var placeholders = new Dictionary<string, string>
+                {
+                    { "FullName", user.FullName },
+                    { "Token", user.PasswordResetToken }
+                };
+                await _mailService.SendTemplateEmailAsync(user.Email, "Đặt lại mật khẩu SocialMini", "ResetPassword", placeholders);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Forgot Password Email Error: {ex.Message}");
+            }
+        });
+
+        return AuthMsg.Password.ForgotEmailSent;
+    }
+
+    public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == token && u.ResetTokenExpires > DateTime.Now);
+        if (user == null) return false;
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        user.PasswordResetToken = null;
+        user.ResetTokenExpires = null;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     private string CreateToken(User user)
     {
         var claims = new List<Claim> {

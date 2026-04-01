@@ -67,7 +67,7 @@ builder.Services.AddDbContext<DataContext>(options =>
     }
     else
     {
-        options.UseSqlServer(connectionString);
+        options.UseNpgsql("Host=localhost;Database=dummy");
     }
 });
 // Add services to the container.
