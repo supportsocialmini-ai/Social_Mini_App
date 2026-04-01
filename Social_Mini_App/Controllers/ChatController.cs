@@ -56,15 +56,34 @@ public class ChatController : ControllerBase
         if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId)) 
             return Unauthorized(ApiResponse<object>.Fail(UserMsg.Profile.Unauthorized));
 
-        var users = await _context.Users
-            .Where(u => u.UserId != currentUserId)
-            .Select(u => new
+        var users = await _context.ConversationParticipants
+            .Where(cp => cp.UserId == currentUserId)
+            // Join to find the *other* participants in the same conversation
+            .SelectMany(cp => _context.ConversationParticipants
+                .Where(cp2 => cp2.ConversationId == cp.ConversationId && cp2.UserId != currentUserId))
+            // Get the last message time for each conversation to check if it has messages
+            .Select(cp2 => new
+            {
+                cp2.UserId,
+                cp2.ConversationId,
+                LastMessageTime = _context.Messages
+                    .Where(m => m.ConversationId == cp2.ConversationId)
+                    .Max(m => (DateTime?)m.CreatedAt)
+            })
+            // Only include conversations that actually have at least one message
+            .Where(x => x.LastMessageTime != null)
+            // Sort by most recently active conversation
+            .OrderByDescending(x => x.LastMessageTime)
+            // Join with Users table to get the display info
+            .Join(_context.Users, x => x.UserId, u => u.UserId, (x, u) => new
             {
                 u.UserId,
                 u.Username,
                 FullName = u.FullName,
                 u.AvatarUrl
             })
+            // Distinct in case there are multiple shared conversations (e.g. groups if enabled later)
+            .Distinct()
             .ToListAsync();
 
         return Ok(ApiResponse<object>.Ok(users));
