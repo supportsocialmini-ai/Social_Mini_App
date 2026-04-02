@@ -158,6 +158,12 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<DataContext>();
+        Console.WriteLine("--- DATABASE RESET STARTED (TEMPORARY) ---");
+        
+        // CẢNH BÁO: Lệnh này sẽ xóa sạch dữ liệu cũ để đồng bộ lại từ đầu
+        context.Database.EnsureDeleted(); 
+        Console.WriteLine("--- Old Tables Dropped Successfully ---");
+        
         Console.WriteLine("--- Database Migration Started ---");
         context.Database.Migrate();
         Console.WriteLine("--- Database Migration Completed ---");
