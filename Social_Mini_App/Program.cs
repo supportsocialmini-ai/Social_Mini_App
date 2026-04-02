@@ -33,12 +33,11 @@ builder.Services.AddCors(options =>
                     "http://127.0.0.1:5500",
                     "https://social-mini-app.onrender.com", 
                     "https://social-mini-fe.vercel.app",
-                    "https://socialminiweb.vercel.app", 
-                    "null"
+                    "https://socialminiweb.vercel.app"
                   )
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .AllowCredentials(); // Giữ nguyên cái này để SignalR chạy
+                  .AllowCredentials();
         });
 });
 builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
@@ -152,26 +151,23 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Tự động chạy Migration ở chế độ chạy ngầm để không làm chậm quá trình Bind Port trên Render
-_ = Task.Run(() =>
+// Tự động chạy Migration đồng bộ khi app khởi động để đảm bảo DB luôn sẵn sàng
+using (var scope = app.Services.CreateScope())
 {
-    using (var scope = app.Services.CreateScope())
+    var services = scope.ServiceProvider;
+    try
     {
-        var services = scope.ServiceProvider;
-        try
-        {
-            var context = services.GetRequiredService<DataContext>();
-            // Đợi 1 chút để app kịp bind port xong
-            Thread.Sleep(5000); 
-            context.Database.Migrate();
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while migrating the database.");
-        }
+        var context = services.GetRequiredService<DataContext>();
+        Console.WriteLine("--- Database Migration Started ---");
+        context.Database.Migrate();
+        Console.WriteLine("--- Database Migration Completed ---");
     }
-});
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
 
 // Configure the HTTP request pipeline.
 // Luôn bật Swagger để dễ debug khi deploy
