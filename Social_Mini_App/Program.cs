@@ -67,7 +67,7 @@ builder.Services.AddDbContext<DataContext>(options =>
     }
     else
     {
-        options.UseNpgsql("Host=localhost;Database=dummy");
+        options.UseSqlServer(builder.Configuration.GetConnectionString("MiniSocialCon"));
     }
 });
 // Add services to the container.
