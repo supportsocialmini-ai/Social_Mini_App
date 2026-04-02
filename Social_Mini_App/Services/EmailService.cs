@@ -29,6 +29,13 @@ namespace MiniSocialNetwork.Services
             var refreshToken = _configuration["GmailApi:RefreshToken"];
             var fromEmail = _configuration["MailSettings:Email"] ?? "support.socialmini@gmail.com";
 
+            // LOG DEBUG: Kiểm tra giá trị đang nhận được (Che bớt ở giữa)
+            if (!string.IsNullOrEmpty(clientId))
+                _logger.LogInformation("DEBUG - ClientId: {Start}...{End}", clientId[..5], clientId[^10..]);
+            
+            if (!string.IsNullOrEmpty(refreshToken))
+                _logger.LogInformation("DEBUG - RefreshToken: {Start}...{End}", refreshToken[..5], refreshToken[^5..]);
+
             if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret) || string.IsNullOrEmpty(refreshToken))
             {
                 _logger.LogError("Gmail API credentials are missing in configuration.");
