@@ -22,6 +22,9 @@ namespace Social_Mini_App.Models
         [ForeignKey("CreatorId")]
         public virtual User? Creator { get; set; }
 
+        [MaxLength(500)]
+        public string? AvatarUrl { get; set; }
+
 
         // Navigation properties
         public virtual ICollection<ConversationParticipant> Participants { get; set; } = new List<ConversationParticipant>();
