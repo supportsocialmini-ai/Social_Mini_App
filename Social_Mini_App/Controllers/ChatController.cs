@@ -279,7 +279,6 @@ public class ChatController : ControllerBase
                   {
                       c.ConversationId,
                       c.Title,
-                      c.AvatarUrl,
                       c.CreatorId,
                       c.CreatedAt,
                       cp.IsAdmin,
