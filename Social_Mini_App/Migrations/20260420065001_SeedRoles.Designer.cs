@@ -58,6 +58,86 @@ namespace Social_Mini_App.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Bio")
+                        .HasMaxLength(255);
+
+                    b.Property<DateTime>("CreatedAt");
+
+                    b.Property<string>("Email")
+                        .IsRequired();
+
+                    b.Property<string>("FullName")
+                        .IsRequired();
+
+                    b.Property<bool>("IsActive");
+
+                    b.Property<bool>("IsVerified");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired();
+
+                    b.Property<string>("PasswordResetToken");
+
+                    b.Property<DateTime?>("ResetTokenExpires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Username")
+                        .IsRequired();
+
+                    b.Property<string>("VerificationToken");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = new Guid("f2a4f4d2-d890-4e7a-9391-0300fc749003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "admin@socialmini.com",
+                            FullName = "Quản trị viên",
+                            IsActive = true,
+                            IsVerified = true,
+                            PasswordHash = "$2a$11$aRtwrGOmOjfzLc5JmHat/OURRrSltBiM5XWAHLiga4BZefXkKzVnG",
+                            Username = "admin"
+                        });
+                });
+
+            modelBuilder.Entity("MiniSocialNetwork.Models.UserRole", b =>
+                {
+                    b.Property<Guid>("UserId");
+
+                    b.Property<Guid>("RoleId");
+
+                    b.Property<DateTime>("AssignedAt");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("UserRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = new Guid("f2a4f4d2-d890-4e7a-9391-0300fc749003"),
+                            RoleId = new Guid("f2a4f4d2-d890-4e7a-9391-0300fc749001"),
+                            AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
+                });
+
+            modelBuilder.Entity("MiniSocialNetwork.Models.User", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Bio")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
