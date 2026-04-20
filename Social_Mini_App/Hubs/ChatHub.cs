@@ -24,6 +24,20 @@ namespace Social_Mini_App.Hubs
                 OnlineUsers[userId] = Context.ConnectionId;
                 // Broadcast cho tất cả: user này vừa online
                 await Clients.Others.SendAsync("UserOnline", guid);
+
+                // Tự động join vào tất cả SignalR Groups (group chat) của user
+                var groupIds = await _context.ConversationParticipants
+                    .Where(cp => cp.UserId == guid)
+                    .Join(_context.Conversations.Where(c => c.IsGroupChat),
+                          cp => cp.ConversationId,
+                          c => c.ConversationId,
+                          (cp, c) => c.ConversationId.ToString())
+                    .ToListAsync();
+
+                foreach (var groupId in groupIds)
+                {
+                    await Groups.AddToGroupAsync(Context.ConnectionId, $"group_{groupId}");
+                }
             }
             await base.OnConnectedAsync();
         }
@@ -124,6 +138,106 @@ namespace Social_Mini_App.Hubs
                 // Thông báo cho 'otherUserId' rằng 'currentUserId' đã xem tin nhắn
                 await Clients.User(otherUserId.ToString()).SendAsync("MessageSeen", currentUserId);
             }
+        }
+
+        // Cho phép client yêu cầu join vào một SignalR group
+        public async Task JoinGroup(Guid groupId)
+        {
+            if (!Guid.TryParse(Context.UserIdentifier, out var userId)) return;
+
+            // Verify the user is actually a member of this group
+            var isMember = await _context.ConversationParticipants
+                .AnyAsync(cp => cp.ConversationId == groupId && cp.UserId == userId);
+
+            if (isMember)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"group_{groupId}");
+            }
+        }
+
+        // Thông báo cho các thành viên khác rằng có nhóm mới được tạo
+        public async Task NotifyNewGroup(Guid groupId, List<Guid> memberIds, string groupName)
+        {
+            // Gửi cho tất cả memberIds (trừ người gửi vì người gửi đã tự add rồi)
+            var currentUserId = Context.UserIdentifier;
+            var otherMembers = memberIds.Where(id => id.ToString() != currentUserId).Select(id => id.ToString()).ToList();
+            
+            await Clients.Users(otherMembers).SendAsync("OnNewGroupCreated", new {
+                ConversationId = groupId,
+                Title = groupName,
+                MemberCount = memberIds.Count,
+                CreatedAt = DateTime.Now
+            });
+        }
+
+        public async Task SendGroupMessage(Guid groupId, string content, string? imageUrl)
+        {
+            if (!Guid.TryParse(Context.UserIdentifier, out var senderId))
+                return;
+
+            bool hasContent = !string.IsNullOrWhiteSpace(content);
+            bool hasImage = !string.IsNullOrWhiteSpace(imageUrl);
+
+            if ((!hasContent && !hasImage) || (hasContent && content.Length > 500))
+            {
+                await Clients.Caller.SendAsync("ReceiveError", "Tin nhắn không hợp lệ hoặc quá dài!");
+                return;
+            }
+
+            // Verify sender is a member of the group
+            var isMember = await _context.ConversationParticipants
+                .AnyAsync(cp => cp.ConversationId == groupId && cp.UserId == senderId);
+
+            if (!isMember)
+            {
+                await Clients.Caller.SendAsync("ReceiveError", "Bạn không phải thành viên nhóm này!");
+                return;
+            }
+
+            var chatMsg = new Message
+            {
+                MessageId = Guid.NewGuid(),
+                SenderId = senderId,
+                ConversationId = groupId,
+                MessageContent = content,
+                ImageUrl = imageUrl,
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+
+            _context.Messages.Add(chatMsg);
+            await _context.SaveChangesAsync();
+
+            // Get sender info for display
+            var sender = await _context.Users.FindAsync(senderId);
+            var senderName = sender?.FullName ?? sender?.Username ?? "Unknown";
+            var senderAvatar = sender?.AvatarUrl;
+
+            // Broadcast to all members of the group via SignalR group
+            await Clients.Group($"group_{groupId}").SendAsync(
+                "ReceiveGroupMessage",
+                chatMsg.MessageId,
+                groupId,
+                senderId,
+                senderName,
+                senderAvatar,
+                content,
+                imageUrl,
+                chatMsg.CreatedAt
+            );
+
+            // Gửi riêng cho người gọi để đảm bảo tin nhắn hiển thị ngay lập tức trên màn hình của họ
+            await Clients.Caller.SendAsync(
+                "ReceiveGroupMessage",
+                chatMsg.MessageId,
+                groupId,
+                senderId,
+                senderName,
+                senderAvatar,
+                content,
+                imageUrl,
+                chatMsg.CreatedAt
+            );
         }
     }
 }

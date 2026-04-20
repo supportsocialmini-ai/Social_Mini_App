@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniSocialNetwork.Data;
 using MiniSocialNetwork.Wrappers;
+using Social_Mini_App.Dtos.Requests;
 using Social_Mini_App.Hubs;
 using Social_Mini_App.Models;
 using Social_Mini_App.Messages;
@@ -202,5 +203,178 @@ public class ChatController : ControllerBase
         {
             return BadRequest(ApiResponse<string>.Fail(ChatMsg.Upload.Fail, ex.Message));
         }
+    }
+
+    // ==================== GROUP CHAT ====================
+
+    [HttpPost("group")]
+    public async Task<IActionResult> CreateGroup([FromBody] CreateGroupRequest request)
+    {
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId))
+            return Unauthorized(ApiResponse<object>.Fail(UserMsg.Profile.Unauthorized));
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(ApiResponse<string>.Fail("Tên nhóm không được để trống!"));
+
+        if (request.MemberIds == null || request.MemberIds.Count < 1)
+            return BadRequest(ApiResponse<string>.Fail("Nhóm phải có ít nhất 2 thành viên!"));
+
+        var group = new Conversation
+        {
+            ConversationId = Guid.NewGuid(),
+            Title = request.Name.Trim(),
+            IsGroupChat = true,
+            CreatorId = currentUserId,
+            CreatedAt = DateTime.Now
+        };
+
+        // Add creator as admin participant
+        var participants = new List<ConversationParticipant>
+        {
+            new ConversationParticipant
+            {
+                ParticipantId = Guid.NewGuid(),
+                ConversationId = group.ConversationId,
+                UserId = currentUserId,
+                IsAdmin = true,
+                JoinedAt = DateTime.Now
+            }
+        };
+
+        // Add other members
+        foreach (var memberId in request.MemberIds.Distinct())
+        {
+            if (memberId == currentUserId) continue;
+            participants.Add(new ConversationParticipant
+            {
+                ParticipantId = Guid.NewGuid(),
+                ConversationId = group.ConversationId,
+                UserId = memberId,
+                IsAdmin = false,
+                JoinedAt = DateTime.Now
+            });
+        }
+
+        await _context.Conversations.AddAsync(group);
+        await _context.ConversationParticipants.AddRangeAsync(participants);
+        await _context.SaveChangesAsync();
+
+        return Ok(ApiResponse<object>.Ok(new { group.ConversationId, group.Title, group.CreatedAt }));
+    }
+
+    [HttpGet("groups")]
+    public async Task<IActionResult> GetMyGroups()
+    {
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId))
+            return Unauthorized(ApiResponse<object>.Fail(UserMsg.Profile.Unauthorized));
+
+        var groups = await _context.ConversationParticipants
+            .Where(cp => cp.UserId == currentUserId)
+            .Join(_context.Conversations.Where(c => c.IsGroupChat),
+                  cp => cp.ConversationId,
+                  c => c.ConversationId,
+                  (cp, c) => new
+                  {
+                      c.ConversationId,
+                      c.Title,
+                      c.AvatarUrl,
+                      c.CreatorId,
+                      c.CreatedAt,
+                      cp.IsAdmin,
+                      LastMessageTime = _context.Messages
+                          .Where(m => m.ConversationId == c.ConversationId)
+                          .Max(m => (DateTime?)m.CreatedAt),
+                      LastMessage = _context.Messages
+                          .Where(m => m.ConversationId == c.ConversationId)
+                          .OrderByDescending(m => m.CreatedAt)
+                          .Select(m => m.MessageContent)
+                          .FirstOrDefault(),
+                      MemberCount = _context.ConversationParticipants
+                          .Count(p => p.ConversationId == c.ConversationId),
+                      UnreadCount = _context.Messages
+                          .Count(m => m.ConversationId == c.ConversationId && m.SenderId != currentUserId && !m.IsRead)
+                  })
+            .OrderByDescending(g => g.LastMessageTime)
+            .ToListAsync();
+
+        return Ok(ApiResponse<object>.Ok(groups));
+    }
+
+    [HttpGet("group/{groupId}")]
+    public async Task<IActionResult> GetGroupMessages(Guid groupId)
+    {
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId))
+            return Unauthorized(ApiResponse<object>.Fail(UserMsg.Profile.Unauthorized));
+
+        var isMember = await _context.ConversationParticipants
+            .AnyAsync(cp => cp.ConversationId == groupId && cp.UserId == currentUserId);
+
+        if (!isMember)
+            return Forbid();
+
+        var messages = await _context.Messages
+            .Where(m => m.ConversationId == groupId)
+            .OrderBy(m => m.CreatedAt)
+            .Join(_context.Users, m => m.SenderId, u => u.UserId, (m, u) => new
+            {
+                m.MessageId,
+                m.SenderId,
+                SenderName = u.FullName ?? u.Username,
+                SenderAvatar = u.AvatarUrl,
+                m.MessageContent,
+                m.ImageUrl,
+                m.CreatedAt,
+                m.IsRead
+            })
+            .ToListAsync();
+
+        return Ok(ApiResponse<object>.Ok(messages));
+    }
+
+    [HttpPost("group/{groupId}/read")]
+    public async Task<IActionResult> MarkGroupAsRead(Guid groupId)
+    {
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId))
+            return Unauthorized(ApiResponse<string>.Fail(UserMsg.Profile.Unauthorized));
+
+        var unread = await _context.Messages
+            .Where(m => m.ConversationId == groupId && m.SenderId != currentUserId && !m.IsRead)
+            .ToListAsync();
+
+        foreach (var m in unread) m.IsRead = true;
+        await _context.SaveChangesAsync();
+
+        return Ok(ApiResponse<string>.Ok("Marked as read"));
+    }
+
+    [HttpGet("group/{groupId}/members")]
+    public async Task<IActionResult> GetGroupMembers(Guid groupId)
+    {
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId))
+            return Unauthorized(ApiResponse<object>.Fail(UserMsg.Profile.Unauthorized));
+
+        var isMember = await _context.ConversationParticipants
+            .AnyAsync(cp => cp.ConversationId == groupId && cp.UserId == currentUserId);
+        if (!isMember) return Forbid();
+
+        var members = await _context.ConversationParticipants
+            .Where(cp => cp.ConversationId == groupId)
+            .Join(_context.Users, cp => cp.UserId, u => u.UserId, (cp, u) => new
+            {
+                u.UserId,
+                u.Username,
+                FullName = u.FullName,
+                u.AvatarUrl,
+                cp.IsAdmin,
+                cp.JoinedAt
+            })
+            .ToListAsync();
+
+        return Ok(ApiResponse<object>.Ok(members));
     }
 }

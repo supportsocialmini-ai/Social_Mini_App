@@ -41,6 +41,13 @@ namespace MiniSocialNetwork.Data
                 .HasForeignKey(m => m.ConversationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Group chat Creator
+            modelBuilder.Entity<Conversation>()
+                .HasOne(c => c.Creator)
+                .WithMany()
+                .HasForeignKey(c => c.CreatorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<ConversationParticipant>()
                 .HasOne(cp => cp.User)
                 .WithMany()

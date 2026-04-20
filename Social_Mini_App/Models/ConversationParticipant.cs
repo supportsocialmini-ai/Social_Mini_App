@@ -22,5 +22,8 @@ namespace Social_Mini_App.Models
         public virtual User User { get; set; } = null!;
 
         public DateTime JoinedAt { get; set; } = DateTime.Now;
+
+        // Is this participant an admin of the group?
+        public bool IsAdmin { get; set; } = false;
     }
 }
