@@ -7,6 +7,7 @@ using MiniSocialNetwork.Data;
 using MiniSocialNetwork.Interfaces;
 using MiniSocialNetwork.Services;
 using Social_Mini_App.Interfaces;
+using Social_Mini_App.Middleware;
 using Social_Mini_App.Services;
 using System.Text;
 using System.Text.Json;
@@ -194,6 +195,8 @@ else
 app.UseCors("MyAllowSpecificOrigins");
 
 app.UseAuthentication();
+
+app.UseMiddleware<MaintenanceMiddleware>();
 
 app.UseHttpsRedirection();
 

@@ -39,6 +39,27 @@ namespace Social_Mini_App.Controllers
             }));
         }
 
+        [HttpGet("maintenance-status")]
+        public async Task<ActionResult<object>> GetMaintenanceStatus()
+        {
+            var setting = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == "MaintenanceMode");
+            return Ok(new { isMaintenance = setting?.Value?.ToLower() == "true" });
+        }
+
+        [HttpPost("toggle-maintenance")]
+        public async Task<ActionResult<object>> ToggleMaintenance()
+        {
+            var setting = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == "MaintenanceMode");
+            if (setting == null) return NotFound();
+
+            bool currentStatus = setting.Value.ToLower() == "true";
+            setting.Value = (!currentStatus).ToString().ToLower();
+            setting.LastModified = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { isMaintenance = setting.Value == "true" });
+        }
+
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {

@@ -21,6 +21,7 @@ namespace MiniSocialNetwork.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Reply> Replies { get; set; }
+        public DbSet<SystemSetting> SystemSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -156,6 +157,18 @@ namespace MiniSocialNetwork.Data
                     UserId = adminUserId, 
                     RoleId = adminRoleId,
                     AssignedAt = new DateTime(2026, 1, 1) 
+                }
+            );
+
+            // Seed SystemSettings cho Maintenance Mode
+            modelBuilder.Entity<SystemSetting>().HasData(
+                new SystemSetting
+                {
+                    SettingId = Guid.Parse("f2a4f4d2-d890-4e7a-9391-0300fc749005"),
+                    Key = "MaintenanceMode",
+                    Value = "false",
+                    Description = "Global maintenance mode toggle. If true, non-admins are blocked.",
+                    LastModified = new DateTime(2026, 1, 1)
                 }
             );
         }
