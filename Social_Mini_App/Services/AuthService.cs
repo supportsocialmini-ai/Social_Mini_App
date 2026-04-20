@@ -88,8 +88,11 @@ public class AuthService : IAuthService
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             return null;
 
-        if (!user.IsActive)
+        if (!user.IsVerified)
             throw new Exception(AuthMsg.Login.UserNotVerified);
+
+        if (!user.IsActive)
+            throw new Exception(AuthMsg.Login.UserBanned);
 
         var roles = await _context.UserRoles
             .Where(ur => ur.UserId == user.UserId)

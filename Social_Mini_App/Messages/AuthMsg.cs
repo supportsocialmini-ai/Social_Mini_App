@@ -13,6 +13,7 @@ public static class AuthMsg
     {
         public const string Fail = "Auth.Login.Fail";
         public const string UserNotVerified = "Auth.Login.UserNotVerified";
+        public const string UserBanned = "Auth.Login.UserBanned";
     }
 
     public struct Verify

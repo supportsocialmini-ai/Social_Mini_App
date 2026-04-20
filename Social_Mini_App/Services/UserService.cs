@@ -16,8 +16,10 @@ namespace Social_Mini_App.Services
 
         public async Task<User?> GetUserByIdAsync(Guid id)
         {
-            // Bốc đúng thằng user theo ID từ bảng Users (có cả Email, FullName...)
-            return await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
+            return await _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.UserId == id);
         }
         public async Task<bool> UpdateUserAsync(User user)
         {

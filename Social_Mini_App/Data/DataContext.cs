@@ -123,6 +123,44 @@ namespace MiniSocialNetwork.Data
                 .HasOne(ur => ur.Role)
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId);
+
+            // Data Seeding cho Roles
+            var adminRoleId = Guid.Parse("f2a4f4d2-d890-4e7a-9391-0300fc749001");
+            var userRoleId = Guid.Parse("f2a4f4d2-d890-4e7a-9391-0300fc749002");
+
+            modelBuilder.Entity<Role>().HasData(
+                new Role { RoleId = adminRoleId, Name = "Admin" },
+                new Role { RoleId = userRoleId, Name = "User" }
+            );
+
+            // Data Seeding cho tài khoản Admin mặc định (admin/admin123)
+            var adminUserId = Guid.Parse("f2a4f4d2-d890-4e7a-9391-0300fc749003");
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    UserId = adminUserId,
+                    Username = "admin",
+                    PasswordHash = "$2a$11$aRtwrGOmOjfzLc5JmHat/OURRrSltBiM5XWAHLiga4BZefXkKzVnG", 
+                    FullName = "Quản trị viên",
+                    Email = "admin@socialmini.com",
+                    IsActive = true,
+                    IsVerified = true,
+                    CreatedAt = new DateTime(2026, 1, 1)
+                }
+            );
+
+            // Gán Role Admin cho User Admin
+            modelBuilder.Entity<UserRole>().HasData(
+                new UserRole 
+                { 
+                    UserId = adminUserId, 
+                    RoleId = adminRoleId,
+                    AssignedAt = new DateTime(2026, 1, 1) 
+                }
+            );
         }
     }
-}
+}
+
+
+
