@@ -33,6 +33,7 @@ namespace Social_Mini_App.Middleware
                     var path = context.Request.Path.Value?.ToLower();
                     bool isAllowedPath = path != null && (
                         path.Contains("/api/auth/login") || 
+                        path.Contains("/api/auth/register") || 
                         path.Contains("/api/admin/maintenance-status") ||
                         path.StartsWith("/chathub")
                     );

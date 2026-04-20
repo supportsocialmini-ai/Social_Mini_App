@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MiniSocialNetwork.Data;
 
@@ -11,17 +12,24 @@ using MiniSocialNetwork.Data;
 namespace Social_Mini_App.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260420091839_AddReportSystem")]
+    partial class AddReportSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
+#pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11");
+                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("MiniSocialNetwork.Models.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -48,7 +56,8 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("MiniSocialNetwork.Models.User", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<string>("AvatarUrl")
                         ;
@@ -115,10 +124,10 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("MiniSocialNetwork.Models.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<DateTime>("AssignedAt")
                         ;
@@ -141,7 +150,8 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.Comment", b =>
                 {
                     b.Property<Guid>("CommentId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<string>("CommentContent")
                         .IsRequired()
@@ -152,13 +162,13 @@ namespace Social_Mini_App.Migrations
                         ;
 
                     b.Property<Guid>("PostId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<DateTime?>("UpdatedAt")
                         ;
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.HasKey("CommentId");
 
@@ -172,7 +182,8 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.Conversation", b =>
                 {
                     b.Property<Guid>("ConversationId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<string>("AvatarUrl")
                         .HasMaxLength(500)
@@ -182,7 +193,7 @@ namespace Social_Mini_App.Migrations
                         ;
 
                     b.Property<Guid?>("CreatorId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<bool>("IsGroupChat")
                         ;
@@ -201,10 +212,11 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.ConversationParticipant", b =>
                 {
                     b.Property<Guid>("ParticipantId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<Guid>("ConversationId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<bool>("IsAdmin")
                         ;
@@ -213,7 +225,7 @@ namespace Social_Mini_App.Migrations
                         ;
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.HasKey("ParticipantId");
 
@@ -227,7 +239,8 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.Friendship", b =>
                 {
                     b.Property<Guid>("FriendshipId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<DateTime?>("AcceptedAt")
                         ;
@@ -251,16 +264,17 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.FriendshipMember", b =>
                 {
                     b.Property<Guid>("MemberId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<Guid>("FriendshipId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<bool>("IsRequestSender")
                         ;
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.HasKey("MemberId");
 
@@ -274,10 +288,10 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.Like", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<Guid>("PostId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<DateTime>("CreatedAt")
                         ;
@@ -292,10 +306,11 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.Message", b =>
                 {
                     b.Property<Guid>("MessageId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<Guid>("ConversationId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<DateTime>("CreatedAt")
                         ;
@@ -312,7 +327,7 @@ namespace Social_Mini_App.Migrations
                         ;
 
                     b.Property<Guid>("SenderId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.HasKey("MessageId");
 
@@ -326,7 +341,8 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.Notification", b =>
                 {
                     b.Property<Guid>("NotificationId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<DateTime>("CreatedAt")
                         ;
@@ -343,13 +359,13 @@ namespace Social_Mini_App.Migrations
                         ;
 
                     b.Property<Guid?>("PostId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<Guid>("ReceiverId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<Guid>("SenderId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.HasKey("NotificationId");
 
@@ -361,7 +377,8 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.Post", b =>
                 {
                     b.Property<Guid>("PostId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<DateTime>("CreatedAt")
                         ;
@@ -383,7 +400,7 @@ namespace Social_Mini_App.Migrations
                         ;
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.HasKey("PostId");
 
@@ -395,10 +412,11 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.Reply", b =>
                 {
                     b.Property<Guid>("ReplyId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<Guid>("CommentId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<DateTime>("CreatedAt")
                         ;
@@ -412,7 +430,7 @@ namespace Social_Mini_App.Migrations
                         ;
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.HasKey("ReplyId");
 
@@ -426,7 +444,8 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.Report", b =>
                 {
                     b.Property<Guid>("ReportId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<DateTime>("CreatedAt")
                         ;
@@ -441,13 +460,13 @@ namespace Social_Mini_App.Migrations
                         ;
 
                     b.Property<Guid>("ReporterId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<DateTime?>("ResolvedAt")
                         ;
 
                     b.Property<Guid?>("ResolvedById")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -455,7 +474,7 @@ namespace Social_Mini_App.Migrations
                         ;
 
                     b.Property<Guid>("TargetId")
-                        .HasColumnType("uniqueidentifier");
+                        ;
 
                     b.Property<string>("TargetType")
                         .IsRequired()
@@ -474,7 +493,8 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.SystemSetting", b =>
                 {
                     b.Property<Guid>("SettingId")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        ;
 
                     b.Property<string>("Description")
                         ;
@@ -723,6 +743,7 @@ namespace Social_Mini_App.Migrations
 
                     b.Navigation("Likes");
                 });
+#pragma warning restore 612, 618
         }
     }
 }

@@ -22,6 +22,7 @@ namespace MiniSocialNetwork.Data
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Reply> Replies { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
+        public DbSet<Report> Reports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
