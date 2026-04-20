@@ -17,7 +17,7 @@ public class ChatController : ControllerBase
     private readonly DataContext _context;
     public ChatController(DataContext context) => _context = context;
 
-    [HttpGet("{otherUserId:guid}")]
+    [HttpGet("{otherUserId}")]
     public async Task<IActionResult> GetChatHistory(Guid otherUserId)
     {
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -128,7 +128,7 @@ public class ChatController : ControllerBase
         return Ok(ApiResponse<object>.Ok(counts));
     }
 
-    [HttpPost("{otherUserId:guid}/read")]
+    [HttpPost("{otherUserId}/read")]
     public async Task<IActionResult> MarkAsRead(Guid otherUserId)
     {
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -302,7 +302,7 @@ public class ChatController : ControllerBase
         return Ok(ApiResponse<object>.Ok(groups));
     }
 
-    [HttpGet("group/{groupId:guid}")]
+    [HttpGet("group/{groupId}")]
     public async Task<IActionResult> GetGroupMessages(Guid groupId)
     {
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -334,7 +334,7 @@ public class ChatController : ControllerBase
         return Ok(ApiResponse<object>.Ok(messages));
     }
 
-    [HttpPost("group/{groupId:guid}/read")]
+    [HttpPost("group/{groupId}/read")]
     public async Task<IActionResult> MarkGroupAsRead(Guid groupId)
     {
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -351,7 +351,7 @@ public class ChatController : ControllerBase
         return Ok(ApiResponse<string>.Ok("Marked as read"));
     }
 
-    [HttpGet("group/{groupId:guid}/members")]
+    [HttpGet("group/{groupId}/members")]
     public async Task<IActionResult> GetGroupMembers(Guid groupId)
     {
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
