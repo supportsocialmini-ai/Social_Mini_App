@@ -39,6 +39,7 @@ namespace Social_Mini_App.Controllers
             }));
         }
 
+        [AllowAnonymous]
         [HttpGet("maintenance-status")]
         public async Task<ActionResult<object>> GetMaintenanceStatus()
         {
