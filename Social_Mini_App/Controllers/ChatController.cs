@@ -377,4 +377,60 @@ public class ChatController : ControllerBase
 
         return Ok(ApiResponse<object>.Ok(members));
     }
+
+    [HttpPut("group/{groupId}/avatar")]
+    public async Task<IActionResult> UpdateGroupAvatar(Guid groupId, [FromBody] string imageUrl)
+    {
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId))
+            return Unauthorized(ApiResponse<object>.Fail(UserMsg.Profile.Unauthorized));
+
+        var participant = await _context.ConversationParticipants
+            .FirstOrDefaultAsync(cp => cp.ConversationId == groupId && cp.UserId == currentUserId);
+
+        if (participant == null || !participant.IsAdmin)
+            return Forbid();
+
+        var group = await _context.Conversations.FindAsync(groupId);
+        if (group == null || !group.IsGroupChat)
+            return NotFound(ApiResponse<object>.Fail("Không tìm thấy nhóm!"));
+
+        group.AvatarUrl = imageUrl;
+        await _context.SaveChangesAsync();
+
+        return Ok(ApiResponse<string>.Ok("Cập nhật ảnh nhóm thành công!"));
+    }
+
+    [HttpDelete("group/{groupId}/members/{userId}")]
+    public async Task<IActionResult> RemoveGroupMember(Guid groupId, Guid userId)
+    {
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId))
+            return Unauthorized(ApiResponse<object>.Fail(UserMsg.Profile.Unauthorized));
+
+        var requester = await _context.ConversationParticipants
+            .FirstOrDefaultAsync(cp => cp.ConversationId == groupId && cp.UserId == currentUserId);
+
+        if (requester == null || !requester.IsAdmin)
+            return Forbid();
+
+        var target = await _context.ConversationParticipants
+            .FirstOrDefaultAsync(cp => cp.ConversationId == groupId && cp.UserId == userId);
+
+        if (target == null)
+            return NotFound(ApiResponse<object>.Fail("Người dùng không thuộc nhóm!"));
+
+        // Basic security: Cannot kick the creator, and non-creators shouldn't be able to kick other admins
+        var group = await _context.Conversations.FindAsync(groupId);
+        if (userId == group?.CreatorId)
+            return BadRequest(ApiResponse<object>.Fail("Không thể xóa người sáng lập nhóm!"));
+
+        if (target.IsAdmin && currentUserId != group?.CreatorId)
+            return BadRequest(ApiResponse<object>.Fail("Chỉ người sáng lập mới có thể xóa Admin khác!"));
+
+        _context.ConversationParticipants.Remove(target);
+        await _context.SaveChangesAsync();
+
+        return Ok(ApiResponse<string>.Ok("Đã xóa thành viên khỏi nhóm!"));
+    }
 }
