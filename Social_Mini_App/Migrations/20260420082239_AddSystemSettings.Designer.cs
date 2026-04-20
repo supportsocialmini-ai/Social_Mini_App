@@ -56,31 +56,25 @@ namespace Social_Mini_App.Migrations
                     b.Property<Guid>("UserId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("AvatarUrl")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("AvatarUrl");
 
                     b.Property<string>("Bio")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(255);
 
                     b.Property<DateTime>("CreatedAt");
 
                     b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired();
 
                     b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired();
 
                     b.Property<bool>("IsActive");
 
-                    b.Property<bool>("IsVerified")
-                        .HasColumnType("bit");
+                    b.Property<bool>("IsVerified");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired();
 
                     b.Property<string>("PasswordResetToken")
                         .HasColumnType("nvarchar(max)");
@@ -92,11 +86,9 @@ namespace Social_Mini_App.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired();
 
-                    b.Property<string>("VerificationToken")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("VerificationToken");
 
                     b.HasKey("UserId");
 
@@ -433,13 +425,11 @@ namespace Social_Mini_App.Migrations
                     b.Property<Guid>("SettingId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Description");
 
                     b.Property<string>("Key")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(100);
 
                     b.Property<DateTime>("LastModified")
                         .HasColumnType("timestamp");
