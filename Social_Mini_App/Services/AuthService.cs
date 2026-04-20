@@ -42,6 +42,18 @@ public class AuthService : IAuthService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
+        // Gán Role mặc định là "User"
+        var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
+        if (userRole == null)
+        {
+            userRole = new Role { RoleId = Guid.NewGuid(), Name = "User" };
+            _context.Roles.Add(userRole);
+            await _context.SaveChangesAsync();
+        }
+
+        _context.UserRoles.Add(new UserRole { UserId = user.UserId, RoleId = userRole.RoleId });
+        await _context.SaveChangesAsync();
+
         // Gửi mail xác nhận ở chế độ chạy ngầm (Background Task) 
         // để không làm chậm quá trình đăng ký của người dùng
         _ = Task.Run(async () =>
@@ -79,7 +91,12 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             throw new Exception(AuthMsg.Login.UserNotVerified);
 
-        return CreateToken(user);
+        var roles = await _context.UserRoles
+            .Where(ur => ur.UserId == user.UserId)
+            .Select(ur => ur.Role.Name)
+            .ToListAsync();
+
+        return CreateToken(user, roles);
     }
 
     public async Task<bool> VerifyEmailAsync(string token)
@@ -158,12 +175,17 @@ public class AuthService : IAuthService
         return true;
     }
 
-    private string CreateToken(User user)
+    private string CreateToken(User user, List<string> roles)
     {
         var claims = new List<Claim> {
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
             new Claim(ClaimTypes.Name, user.Username)
         };
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);

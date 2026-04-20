@@ -12,8 +12,7 @@ namespace Social_Mini_App.Dtos.Responses
         public string FullName { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
 
-        // Thêm cho tính năng reply
-        public Guid? ParentCommentId { get; set; }
-        public List<CommentResponse> Replies { get; set; } = new List<CommentResponse>();
+        // Quan hệ với các phản hồi (Level 2)
+        public List<ReplyResponse> Replies { get; set; } = new List<ReplyResponse>();
     }
-}
+}

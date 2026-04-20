@@ -11,14 +11,16 @@ namespace Social_Mini_App.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            var isPostgres = migrationBuilder.ActiveProvider == "Npgsql.EntityFrameworkCore.PostgreSQL";
+
             migrationBuilder.CreateTable(
                 name: "Conversations",
                 columns: table => new
                 {
-                    ConversationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    IsGroupChat = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                    ConversationId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    Title = table.Column<string>(type: isPostgres ? "character varying(200)" : "nvarchar(200)", maxLength: 200, nullable: true),
+                    IsGroupChat = table.Column<bool>(type: isPostgres ? "boolean" : "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -29,11 +31,11 @@ namespace Social_Mini_App.Migrations
                 name: "Friendships",
                 columns: table => new
                 {
-                    FriendshipId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    RequestedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    AcceptedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                    FriendshipId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: false),
+                    RequestedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: true),
+                    AcceptedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: true),
+                    Status = table.Column<string>(type: isPostgres ? "character varying(20)" : "nvarchar(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -44,20 +46,20 @@ namespace Social_Mini_App.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Username = table.Column<string>(type: "text", nullable: false),
-                    PasswordHash = table.Column<string>(type: "text", nullable: false),
-                    FullName = table.Column<string>(type: "text", nullable: false),
-                    Email = table.Column<string>(type: "text", nullable: false),
-                    AvatarUrl = table.Column<string>(type: "text", nullable: true),
-                    Bio = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    IsVerified = table.Column<bool>(type: "boolean", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    VerificationToken = table.Column<string>(type: "text", nullable: true),
-                    PasswordResetToken = table.Column<string>(type: "text", nullable: true),
-                    ResetTokenExpires = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
+                    UserId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    Username = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: false),
+                    PasswordHash = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: false),
+                    FullName = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: false),
+                    AvatarUrl = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: true),
+                    Bio = table.Column<string>(type: isPostgres ? "character varying(255)" : "nvarchar(255)", maxLength: 255, nullable: true),
+                    IsVerified = table.Column<bool>(type: isPostgres ? "boolean" : "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: isPostgres ? "boolean" : "bit", nullable: false),
+                    VerificationToken = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: true),
+                    PasswordResetToken = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: true),
+                    ResetTokenExpires = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -68,10 +70,10 @@ namespace Social_Mini_App.Migrations
                 name: "ConversationParticipants",
                 columns: table => new
                 {
-                    ParticipantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ConversationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    JoinedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                    ParticipantId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    ConversationId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    JoinedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -94,10 +96,10 @@ namespace Social_Mini_App.Migrations
                 name: "FriendshipMembers",
                 columns: table => new
                 {
-                    MemberId = table.Column<Guid>(type: "uuid", nullable: false),
-                    FriendshipId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    IsRequestSender = table.Column<bool>(type: "boolean", nullable: false)
+                    MemberId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    FriendshipId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    IsRequestSender = table.Column<bool>(type: isPostgres ? "boolean" : "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -120,13 +122,13 @@ namespace Social_Mini_App.Migrations
                 name: "Messages",
                 columns: table => new
                 {
-                    MessageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    SenderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ConversationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    MessageContent = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
-                    ImageUrl = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                    MessageId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    SenderId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    ConversationId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    MessageContent = table.Column<string>(type: isPostgres ? "character varying(500)" : "nvarchar(500)", maxLength: 500, nullable: false),
+                    IsRead = table.Column<bool>(type: isPostgres ? "boolean" : "bit", nullable: false),
+                    ImageUrl = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -149,14 +151,14 @@ namespace Social_Mini_App.Migrations
                 name: "Notifications",
                 columns: table => new
                 {
-                    NotificationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ReceiverId = table.Column<Guid>(type: "uuid", nullable: false),
-                    SenderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Message = table.Column<string>(type: "text", nullable: false),
-                    PostId = table.Column<Guid>(type: "uuid", nullable: true),
-                    NotificationType = table.Column<string>(type: "text", nullable: false),
-                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                    NotificationId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    ReceiverId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    SenderId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    Message = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: false),
+                    PostId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: true),
+                    NotificationType = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: false),
+                    IsRead = table.Column<bool>(type: isPostgres ? "boolean" : "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -173,13 +175,13 @@ namespace Social_Mini_App.Migrations
                 name: "Posts",
                 columns: table => new
                 {
-                    PostId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PostContent = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    Privacy = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    ImageUrl = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
+                    PostId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    PostContent = table.Column<string>(type: isPostgres ? "character varying(1000)" : "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    Privacy = table.Column<string>(type: isPostgres ? "character varying(20)" : "nvarchar(20)", maxLength: 20, nullable: false),
+                    ImageUrl = table.Column<string>(type: isPostgres ? "text" : "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -196,13 +198,13 @@ namespace Social_Mini_App.Migrations
                 name: "Comments",
                 columns: table => new
                 {
-                    CommentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CommentContent = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PostId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ParentCommentId = table.Column<Guid>(type: "uuid", nullable: true)
+                    CommentId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    CommentContent = table.Column<string>(type: isPostgres ? "character varying(200)" : "nvarchar(200)", maxLength: 200, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: true),
+                    UserId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    PostId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    ParentCommentId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -231,9 +233,9 @@ namespace Social_Mini_App.Migrations
                 name: "Likes",
                 columns: table => new
                 {
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PostId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                    UserId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    PostId = table.Column<Guid>(type: isPostgres ? "uuid" : "uniqueidentifier", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: isPostgres ? "timestamp without time zone" : "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {

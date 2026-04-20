@@ -20,9 +20,7 @@ namespace Social_Mini_App.Models
         public Guid PostId { get; set; }
         public virtual Post? Post { get; set; } = null!;
 
-        // Quan hệ tự tham chiếu (Self-referencing) để làm Reply
-        public Guid? ParentCommentId { get; set; }
-        public virtual Comment? ParentComment { get; set; }
-        public virtual ICollection<Comment> Replies { get; set; } = new List<Comment>();
+        // Quan hệ với Reply (Tách ra để không tự tham chiếu)
+        public virtual ICollection<Reply> Replies { get; set; } = new List<Reply>();
     }
-}
+}

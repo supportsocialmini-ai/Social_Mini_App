@@ -19,7 +19,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "text",
+                oldType: isPostgres ? "text" : "nvarchar(max)",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
@@ -28,7 +28,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "text");
+                oldType: isPostgres ? "text" : "nvarchar(max)");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -36,7 +36,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone",
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<DateTime>(
@@ -45,7 +45,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone",
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
@@ -54,7 +54,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "text",
+                oldType: isPostgres ? "text" : "nvarchar(max)",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
@@ -63,7 +63,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "text");
+                oldType: isPostgres ? "text" : "nvarchar(max)");
 
             migrationBuilder.AlterColumn<bool>(
                 name: "IsVerified",
@@ -71,7 +71,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
-                oldType: "boolean");
+                oldType: isPostgres ? "boolean" : "bit");
 
             migrationBuilder.AlterColumn<bool>(
                 name: "IsActive",
@@ -79,7 +79,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
-                oldType: "boolean");
+                oldType: isPostgres ? "boolean" : "bit");
 
             migrationBuilder.AlterColumn<string>(
                 name: "FullName",
@@ -87,7 +87,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "text");
+                oldType: isPostgres ? "text" : "nvarchar(max)");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Email",
@@ -95,7 +95,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "text");
+                oldType: isPostgres ? "text" : "nvarchar(max)");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -103,7 +103,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone");
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Bio",
@@ -122,7 +122,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "text",
+                oldType: isPostgres ? "text" : "nvarchar(max)",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<Guid>(
@@ -131,7 +131,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
@@ -139,7 +139,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -147,7 +147,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone",
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
@@ -163,11 +163,10 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "PostContent",
                 table: "Posts",
-                type: isPostgres ? "character varying(1000)" : "nvarchar(1000)",
-                maxLength: 1000,
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "character varying(1000)",
+                oldType: isPostgres ? "character varying(1000)" : "nvarchar(1000)",
                 oldMaxLength: 1000);
 
             migrationBuilder.AlterColumn<string>(
@@ -176,7 +175,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "text",
+                oldType: isPostgres ? "text" : "nvarchar(max)",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<DateTime>(
@@ -185,7 +184,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone");
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "PostId",
@@ -193,7 +192,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "SenderId",
@@ -201,7 +200,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "ReceiverId",
@@ -209,7 +208,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "PostId",
@@ -217,7 +216,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: true,
                 oldClrType: typeof(Guid),
-                oldType: "uuid",
+                oldType: isPostgres ? "uuid" : "uniqueidentifier",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
@@ -226,7 +225,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "text");
+                oldType: isPostgres ? "text" : "nvarchar(max)");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Message",
@@ -234,7 +233,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "text");
+                oldType: isPostgres ? "text" : "nvarchar(max)");
 
             migrationBuilder.AlterColumn<bool>(
                 name: "IsRead",
@@ -242,7 +241,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
-                oldType: "boolean");
+                oldType: isPostgres ? "boolean" : "bit");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -250,7 +249,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone");
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "NotificationId",
@@ -258,7 +257,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "SenderId",
@@ -266,16 +265,15 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<string>(
                 name: "MessageContent",
                 table: "Messages",
-                type: isPostgres ? "character varying(500)" : "nvarchar(500)",
-                maxLength: 500,
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "character varying(500)",
+                oldType: isPostgres ? "character varying(500)" : "nvarchar(2000)",
                 oldMaxLength: 500);
 
             migrationBuilder.AlterColumn<bool>(
@@ -284,7 +282,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
-                oldType: "boolean");
+                oldType: isPostgres ? "boolean" : "bit");
 
             migrationBuilder.AlterColumn<string>(
                 name: "ImageUrl",
@@ -292,7 +290,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "text",
+                oldType: isPostgres ? "text" : "nvarchar(max)",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<DateTime>(
@@ -301,7 +299,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone");
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "ConversationId",
@@ -309,7 +307,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "MessageId",
@@ -317,7 +315,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -325,7 +323,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone");
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "PostId",
@@ -333,7 +331,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
@@ -341,7 +339,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Status",
@@ -359,7 +357,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone",
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<DateTime>(
@@ -368,7 +366,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone");
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "AcceptedAt",
@@ -376,7 +374,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone",
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<Guid>(
@@ -385,7 +383,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
@@ -393,7 +391,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<bool>(
                 name: "IsRequestSender",
@@ -401,7 +399,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
-                oldType: "boolean");
+                oldType: isPostgres ? "boolean" : "bit");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "FriendshipId",
@@ -409,7 +407,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "MemberId",
@@ -417,7 +415,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Title",
@@ -436,7 +434,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
-                oldType: "boolean");
+                oldType: isPostgres ? "boolean" : "bit");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
@@ -444,7 +442,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone");
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "ConversationId",
@@ -452,7 +450,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AddColumn<string>(
                 name: "AvatarUrl",
@@ -473,7 +471,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "JoinedAt",
@@ -481,7 +479,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone");
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "ConversationId",
@@ -489,7 +487,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "ParticipantId",
@@ -497,7 +495,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AddColumn<bool>(
                 name: "IsAdmin",
@@ -512,7 +510,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
@@ -520,7 +518,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone",
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<Guid>(
@@ -529,7 +527,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "ParentCommentId",
@@ -537,7 +535,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: true,
                 oldClrType: typeof(Guid),
-                oldType: "uuid",
+                oldType: isPostgres ? "uuid" : "uniqueidentifier",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<DateTime>(
@@ -546,16 +544,15 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone");
+                oldType: isPostgres ? "timestamp without time zone" : "datetime2");
 
             migrationBuilder.AlterColumn<string>(
                 name: "CommentContent",
                 table: "Comments",
-                type: isPostgres ? "character varying(200)" : "nvarchar(200)",
-                maxLength: 200,
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "character varying(200)",
+                oldType: isPostgres ? "character varying(200)" : "nvarchar(200)",
                 oldMaxLength: 200);
 
             migrationBuilder.AlterColumn<Guid>(
@@ -564,7 +561,7 @@ namespace Social_Mini_App.Migrations
                 type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: isPostgres ? "uuid" : "uniqueidentifier");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Conversations_CreatorId",
@@ -608,7 +605,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "VerificationToken",
                 table: "Users",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: isPostgres ? "text" : "nvarchar(max)",
@@ -617,7 +614,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Username",
                 table: "Users",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(max)");
@@ -625,7 +622,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
                 table: "Users",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
                 oldType: isPostgres ? "timestamp without time zone" : "datetime2",
@@ -634,7 +631,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "ResetTokenExpires",
                 table: "Users",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
                 oldType: isPostgres ? "timestamp without time zone" : "datetime2",
@@ -643,7 +640,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "PasswordResetToken",
                 table: "Users",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: isPostgres ? "text" : "nvarchar(max)",
@@ -652,7 +649,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "PasswordHash",
                 table: "Users",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(max)");
@@ -660,7 +657,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<bool>(
                 name: "IsVerified",
                 table: "Users",
-                type: "boolean",
+                type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
                 oldType: "bit");
@@ -668,7 +665,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<bool>(
                 name: "IsActive",
                 table: "Users",
-                type: "boolean",
+                type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
                 oldType: "bit");
@@ -676,7 +673,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "FullName",
                 table: "Users",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(max)");
@@ -684,7 +681,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Email",
                 table: "Users",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(max)");
@@ -692,7 +689,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
                 table: "Users",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "datetime2");
@@ -711,7 +708,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "AvatarUrl",
                 table: "Users",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: isPostgres ? "text" : "nvarchar(max)",
@@ -720,7 +717,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
                 table: "Users",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -728,7 +725,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
                 table: "Posts",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -736,7 +733,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
                 table: "Posts",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
                 oldType: isPostgres ? "timestamp without time zone" : "datetime2",
@@ -765,7 +762,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "ImageUrl",
                 table: "Posts",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: isPostgres ? "text" : "nvarchar(max)",
@@ -774,7 +771,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
                 table: "Posts",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "datetime2");
@@ -782,7 +779,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "PostId",
                 table: "Posts",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -790,7 +787,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "SenderId",
                 table: "Notifications",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -798,7 +795,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "ReceiverId",
                 table: "Notifications",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -806,7 +803,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "PostId",
                 table: "Notifications",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: true,
                 oldClrType: typeof(Guid),
                 oldType: isPostgres ? "uuid" : "uniqueidentifier",
@@ -815,7 +812,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "NotificationType",
                 table: "Notifications",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(max)");
@@ -823,7 +820,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Message",
                 table: "Notifications",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(max)");
@@ -831,7 +828,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<bool>(
                 name: "IsRead",
                 table: "Notifications",
-                type: "boolean",
+                type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
                 oldType: "bit");
@@ -839,7 +836,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
                 table: "Notifications",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "datetime2");
@@ -847,7 +844,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "NotificationId",
                 table: "Notifications",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -855,7 +852,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "SenderId",
                 table: "Messages",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -873,7 +870,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<bool>(
                 name: "IsRead",
                 table: "Messages",
-                type: "boolean",
+                type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
                 oldType: "bit");
@@ -881,7 +878,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "ImageUrl",
                 table: "Messages",
-                type: "text",
+                type: isPostgres ? "text" : "nvarchar(max)",
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: isPostgres ? "text" : "nvarchar(max)",
@@ -890,7 +887,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
                 table: "Messages",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "datetime2");
@@ -898,7 +895,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "ConversationId",
                 table: "Messages",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -906,7 +903,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "MessageId",
                 table: "Messages",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -914,7 +911,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
                 table: "Likes",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "datetime2");
@@ -922,7 +919,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "PostId",
                 table: "Likes",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -930,7 +927,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
                 table: "Likes",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -948,7 +945,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "RequestedAt",
                 table: "Friendships",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
                 oldType: isPostgres ? "timestamp without time zone" : "datetime2",
@@ -957,7 +954,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
                 table: "Friendships",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "datetime2");
@@ -965,7 +962,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "AcceptedAt",
                 table: "Friendships",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
                 oldType: isPostgres ? "timestamp without time zone" : "datetime2",
@@ -974,7 +971,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "FriendshipId",
                 table: "Friendships",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -982,7 +979,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
                 table: "FriendshipMembers",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -990,7 +987,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<bool>(
                 name: "IsRequestSender",
                 table: "FriendshipMembers",
-                type: "boolean",
+                type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
                 oldType: "bit");
@@ -998,7 +995,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "FriendshipId",
                 table: "FriendshipMembers",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -1006,7 +1003,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "MemberId",
                 table: "FriendshipMembers",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -1025,7 +1022,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<bool>(
                 name: "IsGroupChat",
                 table: "Conversations",
-                type: "boolean",
+                type: isPostgres ? "boolean" : "bit",
                 nullable: false,
                 oldClrType: typeof(bool),
                 oldType: "bit");
@@ -1033,7 +1030,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
                 table: "Conversations",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "datetime2");
@@ -1041,7 +1038,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "ConversationId",
                 table: "Conversations",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -1049,7 +1046,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
                 table: "ConversationParticipants",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -1057,7 +1054,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "JoinedAt",
                 table: "ConversationParticipants",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "datetime2");
@@ -1065,7 +1062,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "ConversationId",
                 table: "ConversationParticipants",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -1073,7 +1070,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "ParticipantId",
                 table: "ConversationParticipants",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -1081,7 +1078,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
                 table: "Comments",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -1089,7 +1086,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
                 table: "Comments",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: true,
                 oldClrType: typeof(DateTime),
                 oldType: isPostgres ? "timestamp without time zone" : "datetime2",
@@ -1098,7 +1095,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "PostId",
                 table: "Comments",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");
@@ -1106,7 +1103,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "ParentCommentId",
                 table: "Comments",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: true,
                 oldClrType: typeof(Guid),
                 oldType: isPostgres ? "uuid" : "uniqueidentifier",
@@ -1115,7 +1112,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "CreatedAt",
                 table: "Comments",
-                type: "timestamp without time zone",
+                type: isPostgres ? "timestamp without time zone" : "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "datetime2");
@@ -1133,7 +1130,7 @@ namespace Social_Mini_App.Migrations
             migrationBuilder.AlterColumn<Guid>(
                 name: "CommentId",
                 table: "Comments",
-                type: "uuid",
+                type: isPostgres ? "uuid" : "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),
                 oldType: "uniqueidentifier");

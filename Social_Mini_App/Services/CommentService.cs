@@ -11,12 +11,14 @@ namespace Social_Mini_App.Services
         private readonly DataContext _context;
         public CommentService(DataContext context) => _context = context;
 
-        // 1. LẤY DANH SÁCH BÌNH LUẬN THEO POST ID (Hỗ trợ cấu trúc lồng nhau)
+        // 1. LẤY DANH SÁCH BÌNH LUẬN THEO POST ID (Cấu trúc 2 tầng: Comment -> Replies)
         public async Task<List<CommentResponse>> GetCommentsByPostIdAsync(Guid postId)
         {
-            var allComments = await _context.Comments
+            return await _context.Comments
                 .Where(c => c.PostId == postId)
                 .Include(c => c.User)
+                .Include(c => c.Replies.OrderBy(r => r.CreatedAt)) // Lấy luôn các câu trả lời
+                    .ThenInclude(r => r.User)
                 .OrderBy(c => c.CreatedAt)
                 .Select(c => new CommentResponse
                 {
@@ -27,45 +29,32 @@ namespace Social_Mini_App.Services
                     CreatedAt = c.CreatedAt,
                     FullName = c.User!.FullName ?? c.User.Username,
                     AvatarUrl = c.User.AvatarUrl,
-                    ParentCommentId = c.ParentCommentId
+                    Replies = c.Replies.Select(r => new ReplyResponse
+                    {
+                        ReplyId = r.ReplyId,
+                        CommentId = r.CommentId,
+                        UserId = r.UserId,
+                        ReplyContent = r.ReplyContent,
+                        CreatedAt = r.CreatedAt,
+                        FullName = r.User!.FullName ?? r.User.Username,
+                        AvatarUrl = r.User.AvatarUrl
+                    }).ToList()
                 })
                 .ToListAsync();
-
-            // Xây dựng cấu trúc cây
-            var commentMap = allComments.ToDictionary(c => c.CommentId);
-            var rootComments = new List<CommentResponse>();
-
-            foreach (var comment in allComments)
-            {
-                if (comment.ParentCommentId == null)
-                {
-                    rootComments.Add(comment);
-                }
-                else
-                {
-                    if (commentMap.TryGetValue(comment.ParentCommentId.Value, out var parent))
-                    {
-                        parent.Replies.Add(comment);
-                    }
-                }
-            }
-
-            return rootComments;
         }
- 
+
         // 2. TẠO BÌNH LUẬN MỚI
         public async Task<CommentResponse?> CreateCommentAsync(Comment comment)
         {
             _context.Comments.Add(comment);
             if (await _context.SaveChangesAsync() > 0)
             {
-                // Sau khi lưu xong, lấy lại thông tin kèm User để trả về cho FE
                 var result = await _context.Comments
                     .Include(c => c.User)
                     .FirstOrDefaultAsync(c => c.CommentId == comment.CommentId);
- 
+
                 if (result == null) return null;
- 
+
                 return new CommentResponse
                 {
                     CommentId = result.CommentId,
@@ -74,25 +63,56 @@ namespace Social_Mini_App.Services
                     CommentContent = result.CommentContent,
                     CreatedAt = result.CreatedAt,
                     FullName = result.User!.FullName ?? result.User.Username,
-                    AvatarUrl = result.User.AvatarUrl,
-                    ParentCommentId = result.ParentCommentId
+                    AvatarUrl = result.User.AvatarUrl
                 };
             }
             return null;
         }
- 
-        // 3. XÓA BÌNH LUẬN (Phải đúng chủ nhân mới được xóa)
+
+        // 3. XÓA BÌNH LUẬN
         public async Task<bool> DeleteCommentAsync(Guid commentId, Guid userId)
         {
             var comment = await _context.Comments.FindAsync(commentId);
-
-            if (comment == null) return false;
-
-            // Kiểm tra xem thằng đang yêu cầu xóa có phải là thằng đã viết cmt không
-            if (comment.UserId != userId) return false;
+            if (comment == null || comment.UserId != userId) return false;
 
             _context.Comments.Remove(comment);
             return await _context.SaveChangesAsync() > 0;
         }
+
+        // 4. TẠO PHẢN HỒI (REPLY)
+        public async Task<ReplyResponse?> CreateReplyAsync(Reply reply)
+        {
+            _context.Replies.Add(reply);
+            if (await _context.SaveChangesAsync() > 0)
+            {
+                var result = await _context.Replies
+                    .Include(r => r.User)
+                    .FirstOrDefaultAsync(r => r.ReplyId == reply.ReplyId);
+
+                if (result == null) return null;
+
+                return new ReplyResponse
+                {
+                    ReplyId = result.ReplyId,
+                    CommentId = result.CommentId,
+                    UserId = result.UserId,
+                    ReplyContent = result.ReplyContent,
+                    CreatedAt = result.CreatedAt,
+                    FullName = result.User!.FullName ?? result.User.Username,
+                    AvatarUrl = result.User.AvatarUrl
+                };
+            }
+            return null;
+        }
+
+        // 5. XÓA PHẢN HỒI
+        public async Task<bool> DeleteReplyAsync(Guid replyId, Guid userId)
+        {
+            var reply = await _context.Replies.FindAsync(replyId);
+            if (reply == null || reply.UserId != userId) return false;
+
+            _context.Replies.Remove(reply);
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
-}
+}

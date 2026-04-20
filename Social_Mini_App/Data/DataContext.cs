@@ -18,6 +18,9 @@ namespace MiniSocialNetwork.Data
         public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<FriendshipMember> FriendshipMembers { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<Reply> Replies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,8 +58,6 @@ namespace MiniSocialNetwork.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Likes Config
-            modelBuilder.Entity<Like>()
-                .HasKey(l => new { l.UserId, l.PostId });
 
             modelBuilder.Entity<Like>()
                 .HasOne(l => l.Post)
@@ -83,10 +84,17 @@ namespace MiniSocialNetwork.Data
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Comment>()
-                .HasOne(c => c.ParentComment)
+            // Reply Config
+            modelBuilder.Entity<Reply>()
+                .HasOne(r => r.Comment)
                 .WithMany(c => c.Replies)
-                .HasForeignKey(c => c.ParentCommentId)
+                .HasForeignKey(r => r.CommentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Reply>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Friendship Config
@@ -101,6 +109,20 @@ namespace MiniSocialNetwork.Data
                 .WithMany(f => f.Members)
                 .HasForeignKey(fm => fm.FriendshipId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // RBAC Many-to-Many Configuration
+            modelBuilder.Entity<UserRole>()
+                .HasKey(ur => new { ur.UserId, ur.RoleId });
+
+            modelBuilder.Entity<UserRole>()
+                .HasOne(ur => ur.User)
+                .WithMany(u => u.UserRoles)
+                .HasForeignKey(ur => ur.UserId);
+
+            modelBuilder.Entity<UserRole>()
+                .HasOne(ur => ur.Role)
+                .WithMany(r => r.UserRoles)
+                .HasForeignKey(ur => ur.RoleId);
         }
     }
 }
