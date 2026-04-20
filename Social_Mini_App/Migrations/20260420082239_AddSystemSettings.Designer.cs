@@ -28,13 +28,11 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("MiniSocialNetwork.Models.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(50);
 
                     b.HasKey("RoleId");
 
@@ -56,8 +54,7 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("MiniSocialNetwork.Models.User", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("nvarchar(max)");
@@ -66,8 +63,7 @@ namespace Social_Mini_App.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAt");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -77,8 +73,7 @@ namespace Social_Mini_App.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool>("IsActive");
 
                     b.Property<bool>("IsVerified")
                         .HasColumnType("bit");
@@ -158,8 +153,7 @@ namespace Social_Mini_App.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAt");
 
                     b.Property<Guid>("PostId")
                         .HasColumnType("uniqueidentifier");
@@ -189,8 +183,7 @@ namespace Social_Mini_App.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAt");
 
                     b.Property<Guid?>("CreatorId")
                         .HasColumnType("uniqueidentifier");
@@ -245,8 +238,7 @@ namespace Social_Mini_App.Migrations
                     b.Property<DateTime?>("AcceptedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAt");
 
                     b.Property<DateTime?>("RequestedAt")
                         .HasColumnType("datetime2");
@@ -293,8 +285,7 @@ namespace Social_Mini_App.Migrations
                     b.Property<Guid>("PostId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAt");
 
                     b.HasKey("UserId", "PostId");
 
@@ -312,8 +303,7 @@ namespace Social_Mini_App.Migrations
                     b.Property<Guid>("ConversationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAt");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
@@ -344,8 +334,7 @@ namespace Social_Mini_App.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAt");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
@@ -380,8 +369,7 @@ namespace Social_Mini_App.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAt");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
@@ -418,8 +406,7 @@ namespace Social_Mini_App.Migrations
                     b.Property<Guid>("CommentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedAt");
 
                     b.Property<string>("ReplyContent")
                         .IsRequired()
@@ -444,8 +431,7 @@ namespace Social_Mini_App.Migrations
             modelBuilder.Entity("Social_Mini_App.Models.SystemSetting", b =>
                 {
                     b.Property<Guid>("SettingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
