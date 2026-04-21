@@ -32,5 +32,10 @@ namespace Social_Mini_App.Models
         public virtual User? User { get; set; }
         public ICollection<Like> Likes { get; set; } = new List<Like>();
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+        // Chức năng Share bài viết
+        public Guid? OriginalPostId { get; set; }
+        [ForeignKey("OriginalPostId")]
+        public virtual Post? OriginalPost { get; set; }
     }
 }

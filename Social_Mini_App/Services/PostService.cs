@@ -18,6 +18,7 @@ namespace Social_Mini_App.Services
 
             var query = _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.OriginalPost).ThenInclude(op => op!.User)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
                 .Where(p => p.UserId == currentUserId 
@@ -38,7 +39,19 @@ namespace Social_Mini_App.Services
                     Privacy = p.Privacy,
                     LikeCount = p.Likes.Count(),
                     IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
-                    CommentCount = p.Comments.Count()
+                    CommentCount = p.Comments.Count(),
+                    OriginalPostId = p.OriginalPostId,
+                    OriginalPost = p.OriginalPost == null ? null : new PostResponse
+                    {
+                        PostId = p.OriginalPost.PostId,
+                        PostContent = p.OriginalPost.PostContent,
+                        CreatedAt = p.OriginalPost.CreatedAt,
+                        UserId = p.OriginalPost.UserId,
+                        FullName = p.OriginalPost.User!.FullName ?? p.OriginalPost.User.Username,
+                        AvatarUrl = p.OriginalPost.User.AvatarUrl,
+                        ImageUrl = p.OriginalPost.ImageUrl,
+                        Privacy = p.OriginalPost.Privacy
+                    }
                 })
                 .ToListAsync();
         }
@@ -48,6 +61,7 @@ namespace Social_Mini_App.Services
         {
             return await _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.OriginalPost).ThenInclude(op => op!.User)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
                 .Where(p => p.UserId == userId)
@@ -64,7 +78,19 @@ namespace Social_Mini_App.Services
                     Privacy = p.Privacy,
                     LikeCount = p.Likes.Count(),
                     IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
-                    CommentCount = p.Comments.Count()
+                    CommentCount = p.Comments.Count(),
+                    OriginalPostId = p.OriginalPostId,
+                    OriginalPost = p.OriginalPost == null ? null : new PostResponse
+                    {
+                        PostId = p.OriginalPost.PostId,
+                        PostContent = p.OriginalPost.PostContent,
+                        CreatedAt = p.OriginalPost.CreatedAt,
+                        UserId = p.OriginalPost.UserId,
+                        FullName = p.OriginalPost.User!.FullName ?? p.OriginalPost.User.Username,
+                        AvatarUrl = p.OriginalPost.User.AvatarUrl,
+                        ImageUrl = p.OriginalPost.ImageUrl,
+                        Privacy = p.OriginalPost.Privacy
+                    }
                 })
                 .ToListAsync();
         }
@@ -82,6 +108,7 @@ namespace Social_Mini_App.Services
 
             return await _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.OriginalPost).ThenInclude(op => op!.User)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
                 .Where(p => p.UserId == userId)
@@ -101,7 +128,19 @@ namespace Social_Mini_App.Services
                     Privacy = p.Privacy,
                     LikeCount = p.Likes.Count(),
                     IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
-                    CommentCount = p.Comments.Count()
+                    CommentCount = p.Comments.Count(),
+                    OriginalPostId = p.OriginalPostId,
+                    OriginalPost = p.OriginalPost == null ? null : new PostResponse
+                    {
+                        PostId = p.OriginalPost.PostId,
+                        PostContent = p.OriginalPost.PostContent,
+                        CreatedAt = p.OriginalPost.CreatedAt,
+                        UserId = p.OriginalPost.UserId,
+                        FullName = p.OriginalPost.User!.FullName ?? p.OriginalPost.User.Username,
+                        AvatarUrl = p.OriginalPost.User.AvatarUrl,
+                        ImageUrl = p.OriginalPost.ImageUrl,
+                        Privacy = p.OriginalPost.Privacy
+                    }
                 })
                 .ToListAsync();
         }

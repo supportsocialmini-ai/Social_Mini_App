@@ -97,6 +97,32 @@ namespace Social_Mini_App.Controllers
             return BadRequest(ApiResponse<string>.Fail(PostMsg.Upsert.CreateFail));
         }
 
+        // 2c. SHARE BÀI VIẾT
+        [HttpPost("{id}/share")]
+        public async Task<IActionResult> Share(Guid id, [FromBody] PostUploadDto shareDto)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == Guid.Empty) return Unauthorized(ApiResponse<string>.Fail("Unauthorized"));
+
+            var originalPost = await _postService.GetPostByIdAsync(id);
+            if (originalPost == null) 
+                return NotFound(ApiResponse<string>.Fail(PostMsg.Get.NotFound));
+
+            var post = new Post
+            {
+                UserId = userId,
+                PostContent = shareDto.Content,
+                Privacy = shareDto.Privacy,
+                CreatedAt = DateTime.UtcNow,
+                OriginalPostId = id // Gắn ID bài viết gốc
+            };
+
+            if (await _postService.CreatePostAsync(post))
+                return Ok(ApiResponse<string>.Ok(PostMsg.Upsert.CreateSuccess));
+
+            return BadRequest(ApiResponse<string>.Fail(PostMsg.Upsert.CreateFail));
+        }
+
         // 3. SỬA BÀI
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] PostUpdateRequest request)

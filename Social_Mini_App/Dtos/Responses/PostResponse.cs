@@ -14,5 +14,9 @@ namespace Social_Mini_App.Dtos.Responses
         public bool IsLiked { get; set; } // Thằng đang xem đã like chưa?
         public string? FirstLikeName { get; set; }
         public int CommentCount { get; set; }
+
+        // Mở rộng cho chức năng Share
+        public Guid? OriginalPostId { get; set; }
+        public PostResponse? OriginalPost { get; set; }
     }
 }

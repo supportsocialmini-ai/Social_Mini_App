@@ -161,6 +161,13 @@ namespace MiniSocialNetwork.Data
                 }
             );
 
+            // Post Share Config
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.OriginalPost)
+                .WithMany()
+                .HasForeignKey(p => p.OriginalPostId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // Seed SystemSettings cho Maintenance Mode
             modelBuilder.Entity<SystemSetting>().HasData(
                 new SystemSetting
