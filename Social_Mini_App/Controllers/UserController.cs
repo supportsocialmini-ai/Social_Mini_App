@@ -84,6 +84,8 @@ namespace Social_Mini_App.Controllers
             if (!string.IsNullOrEmpty(request.Email)) userInDb.Email = request.Email;
             if (!string.IsNullOrEmpty(request.AvatarUrl)) userInDb.AvatarUrl = request.AvatarUrl;
             if (!string.IsNullOrEmpty(request.Bio)) userInDb.Bio = request.Bio;
+            userInDb.Gender = request.Gender;
+            userInDb.DateOfBirth = request.DateOfBirth;
 
             var result = await _userService.UpdateUserAsync(userInDb);
             if (result) 

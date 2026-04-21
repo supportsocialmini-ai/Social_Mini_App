@@ -17,5 +17,7 @@ namespace Social_Mini_App.Dtos.Requests
 
         [MaxLength(255, ErrorMessage = UserMsg.Validation.BioTooLong)]
         public string? Bio { get; set; }
+        public string? Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
     }
 }

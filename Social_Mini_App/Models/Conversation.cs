@@ -13,6 +13,9 @@ namespace Social_Mini_App.Models
         public string? Title { get; set; }
         
         public bool IsGroupChat { get; set; }
+        public bool IsAnonymous { get; set; } = false;
+        public bool User1Matched { get; set; } = false;
+        public bool User2Matched { get; set; } = false;
         
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

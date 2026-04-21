@@ -17,6 +17,17 @@ public class ChatController : ControllerBase
     private readonly DataContext _context;
     public ChatController(DataContext context) => _context = context;
 
+    [HttpGet("conversation/{id}")]
+    public async Task<IActionResult> GetConversationById(Guid id)
+    {
+        var conversation = await _context.Conversations
+            .Include(c => c.Participants)
+            .FirstOrDefaultAsync(c => c.ConversationId == id);
+
+        if (conversation == null) return NotFound();
+        return Ok(ApiResponse<Conversation>.Ok(conversation));
+    }
+
     [HttpGet("{otherUserId}")]
     public async Task<IActionResult> GetChatHistory(Guid otherUserId)
     {

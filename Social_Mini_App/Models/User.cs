@@ -31,6 +31,9 @@ namespace MiniSocialNetwork.Models
         [MaxLength(255)]
         public string? Bio { get; set; }
 
+        public string? Gender { get; set; } // "Male", "Female", "Other"
+        public DateTime? DateOfBirth { get; set; }
+
         public bool IsVerified { get; set; } = false;
         public bool IsActive { get; set; } = true;
         public string? VerificationToken { get; set; }
