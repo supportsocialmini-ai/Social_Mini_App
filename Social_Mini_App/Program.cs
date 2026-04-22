@@ -9,18 +9,22 @@ using MiniSocialNetwork.Services;
 using Social_Mini_App.Interfaces;
 using Social_Mini_App.Middleware;
 using Social_Mini_App.Services;
+using Microsoft.Extensions.Configuration;
 using System.Text;
 using System.Text.Json;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-var builder = WebApplication.CreateBuilder(args);
+Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "1");
 
-// Disable "Reload on Change" for all configuration file sources to avoid hitting inotify limits on Render
-foreach (var source in builder.Configuration.Sources.OfType<Microsoft.Extensions.Configuration.FileConfigurationSource>())
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
-    source.ReloadOnChange = false;
-}
+    Args = args,
+    ContentRootPath = Directory.GetCurrentDirectory()
+});
+
+// Tắt ReloadOnChange cho tất cả các nguồn cấu hình ngay từ đầu
+builder.Configuration.Sources.OfType<FileConfigurationSource>().ToList().ForEach(s => s.ReloadOnChange = false);
 
 builder.Services.AddCors(options =>
 {
