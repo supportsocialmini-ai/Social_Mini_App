@@ -28,6 +28,16 @@ namespace Social_Mini_App.Controllers
             _configuration = configuration;
         }
 
+        [HttpGet("packages")]
+        public async Task<IActionResult> GetPackages()
+        {
+            var packages = await _context.SubscriptionPackages
+                .Where(p => p.IsActive)
+                .OrderBy(p => p.Price)
+                .ToListAsync();
+            return Ok(packages);
+        }
+
         [HttpPost("create")]
         public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentRequest request)
         {
@@ -105,6 +115,9 @@ namespace Social_Mini_App.Controllers
                 // Lấy tên gói để làm Tier (hoặc anh có thể tùy biến logic này)
                 var packageName = payment.Package?.Name ?? "Premium";
 
+                // Lấy thời gian gia hạn từ gói
+                int durationDays = payment.Package?.DurationDays ?? 30;
+
                 if (subscription == null)
                 {
                     subscription = new Subscription
@@ -115,7 +128,7 @@ namespace Social_Mini_App.Controllers
                         PackageId = payment.PackageId,
                         IsActive = true,
                         StartDate = DateTime.Now,
-                        EndDate = DateTime.Now.AddMonths(1),
+                        EndDate = DateTime.Now.AddDays(durationDays),
                         CreatedAt = DateTime.Now
                     };
                     _context.Subscriptions.Add(subscription);
@@ -126,7 +139,7 @@ namespace Social_Mini_App.Controllers
                     subscription.PackageId = payment.PackageId;
                     subscription.IsActive = true;
                     subscription.StartDate = DateTime.Now;
-                    subscription.EndDate = (subscription.EndDate > DateTime.Now ? subscription.EndDate : DateTime.Now).Value.AddMonths(1);
+                    subscription.EndDate = (subscription.EndDate > DateTime.Now ? subscription.EndDate : DateTime.Now).Value.AddDays(durationDays);
                     subscription.UpdatedAt = DateTime.Now;
                 }
 
