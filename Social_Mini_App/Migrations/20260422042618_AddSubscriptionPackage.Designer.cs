@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using MiniSocialNetwork.Data;
@@ -12,9 +13,11 @@ using MiniSocialNetwork.Data;
 namespace Social_Mini_App.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260422042618_AddSubscriptionPackage")]
+    partial class AddSubscriptionPackage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -117,7 +120,7 @@ namespace Social_Mini_App.Migrations
                             UserId = new Guid("f2a4f4d2-d890-4e7a-9391-0300fc749003"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@socialmini.com",
-                            FullName = "Quản trị viên",
+                            FullName = "Qu?n tr? vi�n",
                             IsActive = true,
                             IsVerified = true,
                             PasswordHash = "$2a$11$aRtwrGOmOjfzLc5JmHat/OURRrSltBiM5XWAHLiga4BZefXkKzVnG",
@@ -408,9 +411,6 @@ namespace Social_Mini_App.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<Guid?>("PackageId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -424,8 +424,6 @@ namespace Social_Mini_App.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PackageId");
 
                     b.HasIndex("UserId");
 
@@ -568,9 +566,6 @@ namespace Social_Mini_App.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid?>("PackageId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("timestamp without time zone");
 
@@ -587,9 +582,8 @@ namespace Social_Mini_App.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PackageId");
-
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("Subscriptions");
 
@@ -618,12 +612,6 @@ namespace Social_Mini_App.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<int>("DurationDays")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Features")
-                        .HasColumnType("text");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -647,8 +635,7 @@ namespace Social_Mini_App.Migrations
                         {
                             Id = new Guid("f2a4f4d2-d890-4e7a-9391-0300fc749111"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Gói nâng cấp Premium cho người dùng",
-                            DurationDays = 30,
+                            Description = "G�i n�ng c?p Premium cho ngu?i d�ng",
                             IsActive = true,
                             Name = "Premium",
                             Price = 250000m
@@ -828,17 +815,11 @@ namespace Social_Mini_App.Migrations
 
             modelBuilder.Entity("Social_Mini_App.Models.Payment", b =>
                 {
-                    b.HasOne("Social_Mini_App.Models.SubscriptionPackage", "Package")
-                        .WithMany()
-                        .HasForeignKey("PackageId");
-
                     b.HasOne("MiniSocialNetwork.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Package");
 
                     b.Navigation("User");
                 });
@@ -899,17 +880,11 @@ namespace Social_Mini_App.Migrations
 
             modelBuilder.Entity("Social_Mini_App.Models.Subscription", b =>
                 {
-                    b.HasOne("Social_Mini_App.Models.SubscriptionPackage", "Package")
-                        .WithMany()
-                        .HasForeignKey("PackageId");
-
                     b.HasOne("MiniSocialNetwork.Models.User", "User")
-                        .WithMany("Subscriptions")
-                        .HasForeignKey("UserId")
+                        .WithOne("Subscription")
+                        .HasForeignKey("Social_Mini_App.Models.Subscription", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Package");
 
                     b.Navigation("User");
                 });
@@ -923,7 +898,7 @@ namespace Social_Mini_App.Migrations
                 {
                     b.Navigation("Likes");
 
-                    b.Navigation("Subscriptions");
+                    b.Navigation("Subscription");
 
                     b.Navigation("UserRoles");
                 });

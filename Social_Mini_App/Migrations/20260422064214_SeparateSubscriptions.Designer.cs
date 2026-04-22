@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using MiniSocialNetwork.Data;
@@ -12,9 +13,11 @@ using MiniSocialNetwork.Data;
 namespace Social_Mini_App.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260422064214_SeparateSubscriptions")]
+    partial class SeparateSubscriptions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -117,7 +120,7 @@ namespace Social_Mini_App.Migrations
                             UserId = new Guid("f2a4f4d2-d890-4e7a-9391-0300fc749003"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@socialmini.com",
-                            FullName = "Quản trị viên",
+                            FullName = "Qu?n tr? vi�n",
                             IsActive = true,
                             IsVerified = true,
                             PasswordHash = "$2a$11$aRtwrGOmOjfzLc5JmHat/OURRrSltBiM5XWAHLiga4BZefXkKzVnG",
@@ -618,9 +621,6 @@ namespace Social_Mini_App.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<int>("DurationDays")
-                        .HasColumnType("int");
-
                     b.Property<string>("Features")
                         .HasColumnType("text");
 
@@ -647,8 +647,7 @@ namespace Social_Mini_App.Migrations
                         {
                             Id = new Guid("f2a4f4d2-d890-4e7a-9391-0300fc749111"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Gói nâng cấp Premium cho người dùng",
-                            DurationDays = 30,
+                            Description = "G�i n�ng c?p Premium cho ngu?i d�ng",
                             IsActive = true,
                             Name = "Premium",
                             Price = 250000m

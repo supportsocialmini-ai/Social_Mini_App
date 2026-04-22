@@ -46,5 +46,12 @@ namespace MiniSocialNetwork.Models
         public DateTime? UpdatedAt { get; set; }
         public ICollection<Like> Likes { get; set; } = new List<Like>();
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+
+        // Link to Premium Subscriptions
+        public virtual ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
+
+        // Flattened list of features for Frontend usage
+        [NotMapped]
+        public List<string> ActiveFeatures { get; set; } = new List<string>();
     }
 }

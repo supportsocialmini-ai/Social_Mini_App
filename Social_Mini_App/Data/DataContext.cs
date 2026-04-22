@@ -23,6 +23,9 @@ namespace MiniSocialNetwork.Data
         public DbSet<Reply> Replies { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
         public DbSet<Report> Reports { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<SubscriptionPackage> SubscriptionPackages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,6 +35,13 @@ namespace MiniSocialNetwork.Data
 
             // Configure ConversationParticipant many-to-many
             base.OnModelCreating(modelBuilder);
+            
+            // Configure Subscription Many-to-One with User
+            modelBuilder.Entity<Subscription>()
+                .HasOne(s => s.User)
+                .WithMany(u => u.Subscriptions)
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Messaging Config
             modelBuilder.Entity<Message>()
@@ -126,6 +136,11 @@ namespace MiniSocialNetwork.Data
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId);
 
+            // Configure Payment Amount precision
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.Amount)
+                .HasPrecision(18, 2);
+
             // Data Seeding cho Roles
             var adminRoleId = Guid.Parse("f2a4f4d2-d890-4e7a-9391-0300fc749001");
             var userRoleId = Guid.Parse("f2a4f4d2-d890-4e7a-9391-0300fc749002");
@@ -161,13 +176,6 @@ namespace MiniSocialNetwork.Data
                 }
             );
 
-            modelBuilder.Entity<Post>()
-                .HasOne(p => p.OriginalPost)
-                .WithMany()
-                .HasForeignKey(p => p.OriginalPostId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Seed SystemSettings cho Maintenance Mode
             modelBuilder.Entity<SystemSetting>().HasData(
                 new SystemSetting
                 {
@@ -178,9 +186,39 @@ namespace MiniSocialNetwork.Data
                     LastModified = new DateTime(2026, 1, 1)
                 }
             );
+
+            // Seed gói Premium mặc định
+            modelBuilder.Entity<SubscriptionPackage>().HasData(
+                new SubscriptionPackage
+                {
+                    Id = Guid.Parse("f2a4f4d2-d890-4e7a-9391-0300fc749111"),
+                    Name = "Premium",
+                    Price = 250000,
+                    IsActive = true,
+                    Description = "Gói nâng cấp Premium cho người dùng",
+                    CreatedAt = new DateTime(2026, 1, 1)
+                }
+            );
+
+            // Seed Subscription Premium cho Admin để tiện test
+            modelBuilder.Entity<Subscription>().HasData(
+                new Subscription
+                {
+                    Id = Guid.Parse("f2a4f4d2-d890-4e7a-9391-0300fc749007"),
+                    UserId = adminUserId,
+                    Tier = "Premium",
+                    IsActive = true,
+                    StartDate = new DateTime(2026, 1, 1),
+                    EndDate = new DateTime(2027, 1, 1),
+                    CreatedAt = new DateTime(2026, 1, 1)
+                }
+            );
+
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.OriginalPost)
+                .WithMany()
+                .HasForeignKey(p => p.OriginalPostId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
-
-
-

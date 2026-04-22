@@ -5,6 +5,7 @@ using MiniSocialNetwork.Data;
 using MiniSocialNetwork.Models;
 using MiniSocialNetwork.Wrappers;
 using Social_Mini_App.Interfaces;
+using Social_Mini_App.Models;
 
 namespace Social_Mini_App.Controllers
 {
@@ -61,6 +62,40 @@ namespace Social_Mini_App.Controllers
             return Ok(new { isMaintenance = setting.Value == "true" });
         }
 
+        [HttpPost("packages")]
+        public async Task<IActionResult> CreatePackage([FromBody] SubscriptionPackage package)
+        {
+            package.Id = Guid.NewGuid();
+            package.CreatedAt = DateTime.Now;
+            _context.SubscriptionPackages.Add(package);
+            await _context.SaveChangesAsync();
+            return Ok(ApiResponse<SubscriptionPackage>.Ok(package));
+        }
+
+        [HttpGet("packages")]
+        public async Task<IActionResult> GetPackages()
+        {
+            var packages = await _context.SubscriptionPackages.ToListAsync();
+            return Ok(ApiResponse<object>.Ok(packages));
+        }
+
+        [HttpPut("packages/{id}")]
+        public async Task<IActionResult> UpdatePackage(Guid id, [FromBody] UpdatePackageRequest request)
+        {
+            var package = await _context.SubscriptionPackages.FindAsync(id);
+            if (package == null) return NotFound(ApiResponse<string>.Fail("Không tìm thấy gói dịch vụ"));
+
+            package.Name = request.Name;
+            package.Price = request.Price;
+            package.IsActive = request.IsActive;
+            package.Description = request.Description;
+            package.Features = request.Features;
+            package.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            return Ok(ApiResponse<string>.Ok("Cập nhật gói dịch vụ thành công"));
+        }
+
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -108,5 +143,14 @@ namespace Social_Mini_App.Controllers
 
             return Ok(ApiResponse<string>.Ok("Đã xóa bài viết bởi Admin"));
         }
+    }
+
+    public class UpdatePackageRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public bool IsActive { get; set; }
+        public string? Description { get; set; }
+        public string? Features { get; set; }
     }
 }
