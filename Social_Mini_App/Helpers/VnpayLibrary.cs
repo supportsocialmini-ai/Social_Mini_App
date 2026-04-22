@@ -69,8 +69,8 @@ namespace Social_Mini_App.Helpers
             {
                 if (!string.IsNullOrEmpty(kv.Value) && kv.Key != "vnp_SecureHashType" && kv.Key != "vnp_SecureHash")
                 {
-                    // QUAN TRỌNG: Theo chuẩn VNPay 2.1.0, khi nhận về VẪN PHẢI Encode value
-                    data.Append(kv.Key + "=" + VnpayEncode(kv.Value) + "&");
+                    // SchneeJob logic: Không encode khi validate callback
+                    data.Append(kv.Key + "=" + kv.Value + "&");
                 }
             }
 
