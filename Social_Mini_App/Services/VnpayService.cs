@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Social_Mini_App.Helpers;
 using Social_Mini_App.Interfaces;
 using Social_Mini_App.Models;
+using System.Linq;
 
 namespace Social_Mini_App.Services
 {
@@ -22,7 +23,12 @@ namespace Social_Mini_App.Services
 
             string tmnCode = vnpayConfig["TmnCode"] ?? "";
             string hashSecret = vnpayConfig["HashSecret"] ?? "";
-            string baseUrl = vnpayConfig["BaseUrl"] ?? "";
+            string baseUrl = vnpayConfig["BaseUrl"];
+            
+            if (string.IsNullOrEmpty(baseUrl))
+            {
+                baseUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+            }
 
             var ipAddress = GetIpAddress(context);
             // Chuẩn hóa IP: Lấy đoạn cuối nếu là IPv6 mapped, nếu là ::1 thì đổi về 127.0.0.1
@@ -40,7 +46,10 @@ namespace Social_Mini_App.Services
             vnpay.AddRequestData("vnp_OrderInfo", payment.OrderInfo ?? "Thanh toan don hang");
             vnpay.AddRequestData("vnp_OrderType", "other"); // Theo mẫu anh gửi là 'other'
             var request = context.Request;
-            var returnUrl = $"{request.Scheme}://{request.Host}/api/Payment/vnpay-return";
+            
+            // Xử lý Scheme (http/https) linh hoạt cho Render
+            var scheme = request.Headers["X-Forwarded-Proto"].FirstOrDefault() ?? request.Scheme;
+            var returnUrl = $"{scheme}://{request.Host}/api/Payment/vnpay-return";
             
             vnpay.AddRequestData("vnp_ReturnUrl", returnUrl);
             vnpay.AddRequestData("vnp_TxnRef", payment.OrderId);
