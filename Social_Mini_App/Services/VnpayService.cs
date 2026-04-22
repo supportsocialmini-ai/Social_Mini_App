@@ -18,44 +18,45 @@ namespace Social_Mini_App.Services
 
         public string CreatePaymentUrl(HttpContext context, Payment payment)
         {
-            var vnpay = new VnpayLibrary();
             var vnpayConfig = _configuration.GetSection("Vnpay");
 
             string tmnCode = vnpayConfig["TmnCode"] ?? "";
             string hashSecret = vnpayConfig["HashSecret"] ?? "";
-            string baseUrl = vnpayConfig["BaseUrl"];
-            
-            if (string.IsNullOrEmpty(baseUrl))
-            {
-                baseUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-            }
+            string baseUrl = vnpayConfig["BaseUrl"] ?? "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 
             var ipAddress = GetIpAddress(context);
-            // Chuẩn hóa IP: Lấy đoạn cuối nếu là IPv6 mapped, nếu là ::1 thì đổi về 127.0.0.1
             var finalIp = ipAddress.Contains(":") ? ipAddress.Split(':').Last() : ipAddress;
             if (finalIp == "1") finalIp = "127.0.0.1";
 
-            vnpay.AddRequestData("vnp_Version", "2.1.0");
-            vnpay.AddRequestData("vnp_Command", "pay");
-            vnpay.AddRequestData("vnp_TmnCode", tmnCode);
-            vnpay.AddRequestData("vnp_Amount", ((long)Math.Round(payment.Amount * 100)).ToString()); 
-            vnpay.AddRequestData("vnp_CreateDate", DateTime.UtcNow.AddHours(7).ToString("yyyyMMddHHmmss"));
-            vnpay.AddRequestData("vnp_CurrCode", "VND");
-            vnpay.AddRequestData("vnp_IpAddr", finalIp); 
-            vnpay.AddRequestData("vnp_Locale", "vn");
-            vnpay.AddRequestData("vnp_OrderInfo", payment.OrderInfo ?? "Thanh toan don hang");
-            vnpay.AddRequestData("vnp_OrderType", "other"); // Theo mẫu anh gửi là 'other'
-            var request = context.Request;
-            
-            // Xử lý Scheme (http/https) linh hoạt cho Render
-            var scheme = request.Headers["X-Forwarded-Proto"].FirstOrDefault() ?? request.Scheme;
-            var returnUrl = $"{scheme}://{request.Host}/api/Payment/vnpay-return";
-            
-            vnpay.AddRequestData("vnp_ReturnUrl", returnUrl);
-            vnpay.AddRequestData("vnp_TxnRef", payment.OrderId);
+            var vnpParams = new SortedDictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["vnp_Version"] = "2.1.0",
+                ["vnp_Command"] = "pay",
+                ["vnp_TmnCode"] = tmnCode,
+                ["vnp_Amount"] = ((long)Math.Round(payment.Amount * 100)).ToString(),
+                ["vnp_CreateDate"] = DateTime.UtcNow.AddHours(7).ToString("yyyyMMddHHmmss"),
+                ["vnp_CurrCode"] = "VND",
+                ["vnp_IpAddr"] = finalIp,
+                ["vnp_Locale"] = "vn",
+                ["vnp_OrderInfo"] = payment.OrderInfo?.Replace(" ", "-") ?? "Thanh-toan",
+                ["vnp_OrderType"] = "250000", // Đổi từ 'other' sang mã chuẩn 250000
+                ["vnp_ReturnUrl"] = $"{context.Request.Headers["X-Forwarded-Proto"].FirstOrDefault() ?? context.Request.Scheme}://{context.Request.Host}/api/Payment/vnpay-return",
+                ["vnp_TxnRef"] = payment.OrderId
+            };
 
-            string paymentUrl = vnpay.CreateRequestUrl(baseUrl, hashSecret);
-            return paymentUrl;
+            // Tạo chuỗi data để băm (giống SchneeJob)
+            var signData = string.Join("&", vnpParams
+                .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
+                .Select(kvp => $"{System.Net.WebUtility.UrlEncode(kvp.Key)}={System.Net.WebUtility.UrlEncode(kvp.Value)}"));
+
+            string secureHash;
+            using (var hmac = new System.Security.Cryptography.HMACSHA512(System.Text.Encoding.UTF8.GetBytes(hashSecret)))
+            {
+                var hashBytes = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(signData));
+                secureHash = BitConverter.ToString(hashBytes).Replace("-", "").ToUpperInvariant();
+            }
+
+            return $"{baseUrl}?{signData}&vnp_SecureHash={secureHash}";
         }
 
         private string GetIpAddress(HttpContext context)
