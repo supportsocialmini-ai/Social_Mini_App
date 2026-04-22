@@ -63,7 +63,7 @@ namespace Social_Mini_App.Controllers
                 PackageId = targetPackage.Id, 
                 Amount = targetPackage.Price, 
                 OrderId = DateTime.Now.Ticks.ToString(),
-                OrderInfo = $"Thanh toan goi {targetPackage.Name} cho user {userId}",
+                OrderInfo = $"Thanh-toan-goi-{targetPackage.Name?.Trim()}-cho-user-{userId}".Replace(" ", "-"),
                 Status = "Pending",
                 CreatedAt = DateTime.Now
             };
@@ -91,9 +91,9 @@ namespace Social_Mini_App.Controllers
                 return Redirect($"{GetFrontendUrl()}/payment-result?status=error&message=InvalidSignature");
             }
 
-            var vnp_ResponseCode = collections["vnp_ResponseCode"];
-            var vnp_TxnRef = collections["vnp_TxnRef"];
-            var vnp_TransactionNo = collections["vnp_TransactionNo"];
+            var vnp_ResponseCode = collections["vnp_ResponseCode"].ToString();
+            var vnp_TxnRef = collections["vnp_TxnRef"].ToString();
+            var vnp_TransactionNo = collections["vnp_TransactionNo"].ToString();
 
             var payment = await _context.Payments
                 .Include(p => p.Package)
