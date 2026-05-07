@@ -35,6 +35,7 @@ namespace Social_Mini_App.Middleware
                         path.Contains("/api/auth/login") || 
                         path.Contains("/api/auth/register") || 
                         path.Contains("/api/admin/maintenance-status") ||
+                        path.Contains("/api/system/ping") ||
                         path.StartsWith("/chathub")
                     );
 
