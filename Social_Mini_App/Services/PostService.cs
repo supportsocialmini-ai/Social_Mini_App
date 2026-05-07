@@ -15,15 +15,21 @@ namespace Social_Mini_App.Services
         public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId)
         {
             var friendsIds = await GetFriendsIdsAsync(currentUserId);
+            var joinedGroupIds = await _context.GroupMembers
+                .Where(gm => gm.UserId == currentUserId)
+                .Select(gm => gm.GroupId)
+                .ToListAsync();
 
             var query = _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.Group)
                 .Include(p => p.OriginalPost).ThenInclude(op => op!.User)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
-                .Where(p => p.UserId == currentUserId 
-                         || p.Privacy == "Public" 
-                         || (p.Privacy == "Friends" && friendsIds.Contains(p.UserId)));
+                .Where(p => (p.GroupId == null || joinedGroupIds.Contains(p.GroupId.Value)) &&
+                         (p.UserId == currentUserId 
+                          || p.Privacy == "Public" 
+                          || (p.Privacy == "Friends" && friendsIds.Contains(p.UserId))));
 
             return await query
                 .OrderByDescending(p => p.CreatedAt)
@@ -41,6 +47,8 @@ namespace Social_Mini_App.Services
                     IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
                     CommentCount = p.Comments.Count(),
                     OriginalPostId = p.OriginalPostId,
+                    GroupId = p.GroupId,
+                    GroupName = p.Group != null ? p.Group.Name : null,
                     OriginalPost = p.OriginalPost == null ? null : new PostResponse
                     {
                         PostId = p.OriginalPost.PostId,
@@ -61,6 +69,7 @@ namespace Social_Mini_App.Services
         {
             return await _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.Group)
                 .Include(p => p.OriginalPost).ThenInclude(op => op!.User)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
@@ -80,6 +89,8 @@ namespace Social_Mini_App.Services
                     IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
                     CommentCount = p.Comments.Count(),
                     OriginalPostId = p.OriginalPostId,
+                    GroupId = p.GroupId,
+                    GroupName = p.Group != null ? p.Group.Name : null,
                     OriginalPost = p.OriginalPost == null ? null : new PostResponse
                     {
                         PostId = p.OriginalPost.PostId,
@@ -108,6 +119,7 @@ namespace Social_Mini_App.Services
 
             return await _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.Group)
                 .Include(p => p.OriginalPost).ThenInclude(op => op!.User)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
@@ -130,6 +142,49 @@ namespace Social_Mini_App.Services
                     IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
                     CommentCount = p.Comments.Count(),
                     OriginalPostId = p.OriginalPostId,
+                    GroupId = p.GroupId,
+                    GroupName = p.Group != null ? p.Group.Name : null,
+                    OriginalPost = p.OriginalPost == null ? null : new PostResponse
+                    {
+                        PostId = p.OriginalPost.PostId,
+                        PostContent = p.OriginalPost.PostContent,
+                        CreatedAt = p.OriginalPost.CreatedAt,
+                        UserId = p.OriginalPost.UserId,
+                        FullName = p.OriginalPost.User!.FullName ?? p.OriginalPost.User.Username,
+                        AvatarUrl = p.OriginalPost.User.AvatarUrl,
+                        ImageUrl = p.OriginalPost.ImageUrl,
+                        Privacy = p.OriginalPost.Privacy
+                    }
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<PostResponse>> GetGroupPostsAsync(Guid groupId, Guid currentUserId)
+        {
+            return await _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.Group)
+                .Include(p => p.OriginalPost).ThenInclude(op => op!.User)
+                .Include(p => p.Likes)
+                .Include(p => p.Comments)
+                .Where(p => p.GroupId == groupId)
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new PostResponse
+                {
+                    PostId = p.PostId,
+                    PostContent = p.PostContent,
+                    CreatedAt = p.CreatedAt,
+                    UserId = p.UserId,
+                    FullName = p.User!.FullName ?? p.User.Username,
+                    AvatarUrl = p.User.AvatarUrl,
+                    ImageUrl = p.ImageUrl,
+                    Privacy = p.Privacy,
+                    LikeCount = p.Likes.Count(),
+                    IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
+                    CommentCount = p.Comments.Count(),
+                    OriginalPostId = p.OriginalPostId,
+                    GroupId = p.GroupId,
+                    GroupName = p.Group != null ? p.Group.Name : null,
                     OriginalPost = p.OriginalPost == null ? null : new PostResponse
                     {
                         PostId = p.OriginalPost.PostId,

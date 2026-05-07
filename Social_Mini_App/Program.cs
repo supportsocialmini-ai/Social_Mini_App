@@ -88,6 +88,7 @@ builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

@@ -24,5 +24,9 @@ namespace Social_Mini_App.Dtos.Requests
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,50}$", ErrorMessage = AuthMsg.Validation.PasswordInvalid)]
         [StringLength(50, MinimumLength = 6, ErrorMessage = AuthMsg.Validation.PasswordLength)]
         public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = AuthMsg.Validation.PhoneNumberRequired)]
+        [RegularExpression(@"^(0[3|5|7|8|9])([0-9]{8})$", ErrorMessage = AuthMsg.Validation.PhoneNumberInvalid)]
+        public string PhoneNumber { get; set; } = string.Empty;
     }
 }

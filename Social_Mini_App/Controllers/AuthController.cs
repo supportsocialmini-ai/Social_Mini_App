@@ -23,6 +23,7 @@ namespace Social_Mini_App.Controllers
                 Username = request.Username,
                 Email = request.Email,
                 FullName = request.FullName,
+                PhoneNumber = request.PhoneNumber,
                 CreatedAt = DateTime.Now
             };
 

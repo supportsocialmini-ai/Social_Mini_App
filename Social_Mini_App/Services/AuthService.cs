@@ -31,6 +31,9 @@ public class AuthService : IAuthService
         if (await _context.Users.AnyAsync(u => u.Email == user.Email))
             return AuthMsg.Register.EmailExists;
 
+        if (await _context.Users.AnyAsync(u => u.PhoneNumber == user.PhoneNumber))
+            return AuthMsg.Register.PhoneExists;
+
         // Lấy password từ tham số truyền vào để hash
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
 

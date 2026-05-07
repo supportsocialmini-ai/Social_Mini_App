@@ -7,6 +7,7 @@ public static class AuthMsg
         public const string Success = "Auth.Register.Success";
         public const string UserExists = "Auth.Register.UserExists";
         public const string EmailExists = "Auth.Register.EmailExists";
+        public const string PhoneExists = "Auth.Register.PhoneExists";
     }
 
     public struct Login
@@ -47,5 +48,7 @@ public static class AuthMsg
         public const string PasswordRequired = "PasswordRequired";
         public const string PasswordInvalid = "PasswordInvalid";
         public const string PasswordLength = "PasswordLength";
+        public const string PhoneNumberRequired = "PhoneNumberRequired";
+        public const string PhoneNumberInvalid = "PhoneNumberInvalid";
     }
 }

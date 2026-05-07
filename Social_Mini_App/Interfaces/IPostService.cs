@@ -12,6 +12,7 @@ namespace Social_Mini_App.Interfaces
         Task<bool> DeletePostAsync(Guid id);
         Task<List<PostResponse>> GetMyPostsAsync(Guid userId, Guid currentUserId);
         Task<List<PostResponse>> GetPostsByUserIdAsync(Guid userId, Guid currentUserId);
+        Task<List<PostResponse>> GetGroupPostsAsync(Guid groupId, Guid currentUserId);
         Task<List<UserSummaryDto>> GetPostLikesAsync(Guid postId);
     }
 }

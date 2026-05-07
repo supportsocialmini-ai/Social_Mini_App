@@ -18,5 +18,8 @@ namespace Social_Mini_App.Dtos.Responses
         // Mở rộng cho chức năng Share
         public Guid? OriginalPostId { get; set; }
         public PostResponse? OriginalPost { get; set; }
+
+        public Guid? GroupId { get; set; }
+        public string? GroupName { get; set; }
     }
 }

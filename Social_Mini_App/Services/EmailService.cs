@@ -8,6 +8,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MiniSocialNetwork.Interfaces;
 using System.Text;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
+using MimeKit.Text;
 
 namespace MiniSocialNetwork.Services
 {
@@ -35,6 +39,15 @@ namespace MiniSocialNetwork.Services
             
             if (!string.IsNullOrEmpty(refreshToken))
                 _logger.LogInformation("DEBUG - RefreshToken: {Start}...{End}", refreshToken[..5], refreshToken[^5..]);
+
+            // Chế độ DevMode: Gửi qua SMTP truyền thống (Dùng App Password)
+            var devMode = _configuration.GetValue<bool>("MailSettings:DevMode");
+            if (devMode)
+            {
+                _logger.LogInformation("[DEV MODE] Đang gửi email qua SMTP tới {To}...", to);
+                await SendEmailViaSmtpAsync(to, subject, body);
+                return;
+            }
 
             if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret) || string.IsNullOrEmpty(refreshToken))
             {
@@ -117,6 +130,43 @@ namespace MiniSocialNetwork.Services
             }
 
             await SendEmailAsync(to, subject, body);
+        }
+
+        private async Task SendEmailViaSmtpAsync(string to, string subject, string body)
+        {
+            try
+            {
+                var email = new MimeMessage();
+                email.From.Add(new MailboxAddress(_configuration["MailSettings:DisplayName"] ?? "Social Mini", _configuration["MailSettings:Email"]));
+                email.To.Add(MailboxAddress.Parse(to));
+                email.Subject = subject;
+                email.Body = new TextPart(TextFormat.Html) { Text = body };
+
+                using var smtp = new SmtpClient();
+                // Bỏ qua kiểm tra chứng chỉ SSL nếu cần thiết ở local (tùy chọn)
+                // smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
+
+                await smtp.ConnectAsync(
+                    _configuration["MailSettings:Host"], 
+                    int.Parse(_configuration["MailSettings:Port"] ?? "587"), 
+                    SecureSocketOptions.StartTls
+                );
+
+                await smtp.AuthenticateAsync(
+                    _configuration["MailSettings:Email"], 
+                    _configuration["MailSettings:Password"]
+                );
+
+                await smtp.SendAsync(email);
+                await smtp.DisconnectAsync(true);
+                
+                _logger.LogInformation("SMTP: Email đã được gửi thành công tới {To}", to);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SMTP: Lỗi khi gửi email tới {To}", to);
+                throw;
+            }
         }
 
         private string Base64UrlEncode(string input)

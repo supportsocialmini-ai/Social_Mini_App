@@ -307,6 +307,7 @@ public class ChatController : ControllerBase
                       UnreadCount = _context.Messages
                           .Count(m => m.ConversationId == c.ConversationId && m.SenderId != currentUserId && !m.IsRead)
                   })
+            .Where(g => g.LastMessageTime != null)
             .OrderByDescending(g => g.LastMessageTime)
             .ToListAsync();
 

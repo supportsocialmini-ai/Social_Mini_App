@@ -81,11 +81,14 @@ namespace Social_Mini_App.Controllers
             if (userInDb == null) return NotFound(ApiResponse<User>.Fail(UserMsg.Profile.NotFound));
 
             userInDb.FullName = request.FullName;
+            if (!string.IsNullOrEmpty(request.Username)) userInDb.Username = request.Username;
             if (!string.IsNullOrEmpty(request.Email)) userInDb.Email = request.Email;
             if (!string.IsNullOrEmpty(request.AvatarUrl)) userInDb.AvatarUrl = request.AvatarUrl;
             if (!string.IsNullOrEmpty(request.Bio)) userInDb.Bio = request.Bio;
             userInDb.Gender = request.Gender;
             userInDb.DateOfBirth = request.DateOfBirth;
+            userInDb.PhoneNumber = request.PhoneNumber;
+            userInDb.Interests = request.Interests;
 
             var result = await _userService.UpdateUserAsync(userInDb);
             if (result) 

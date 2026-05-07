@@ -10,6 +10,8 @@ namespace Social_Mini_App.Dtos.Requests
         [StringLength(100, MinimumLength = 2, ErrorMessage = AuthMsg.Validation.FullNameLength)]
         public string FullName { get; set; } = string.Empty;
 
+        public string? Username { get; set; }
+
         [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = AuthMsg.Validation.EmailInvalid)]
         [MaxLength(255)]
         public string? Email { get; set; }
@@ -19,5 +21,7 @@ namespace Social_Mini_App.Dtos.Requests
         public string? Bio { get; set; }
         public string? Gender { get; set; }
         public DateTime? DateOfBirth { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Interests { get; set; }
     }
 }

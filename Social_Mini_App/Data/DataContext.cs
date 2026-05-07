@@ -26,6 +26,8 @@ namespace MiniSocialNetwork.Data
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<SubscriptionPackage> SubscriptionPackages { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<GroupMember> GroupMembers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -218,6 +220,41 @@ namespace MiniSocialNetwork.Data
                 .HasOne(p => p.OriginalPost)
                 .WithMany()
                 .HasForeignKey(p => p.OriginalPostId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Group Configuration
+            modelBuilder.Entity<GroupMember>()
+                .HasKey(gm => new { gm.GroupId, gm.UserId });
+
+            modelBuilder.Entity<GroupMember>()
+                .HasOne(gm => gm.Group)
+                .WithMany(g => g.Members)
+                .HasForeignKey(gm => gm.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GroupMember>()
+                .HasOne(gm => gm.User)
+                .WithMany()
+                .HasForeignKey(gm => gm.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Cấu hình quan hệ Post với User và Group để tránh multiple cascade paths
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Posts)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Đổi sang Restrict
+
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.Group)
+                .WithMany(g => g.Posts)
+                .HasForeignKey(p => p.GroupId)
+                .OnDelete(DeleteBehavior.Restrict); // Đổi sang Restrict
+
+            modelBuilder.Entity<Group>()
+                .HasOne(g => g.Creator)
+                .WithMany()
+                .HasForeignKey(g => g.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

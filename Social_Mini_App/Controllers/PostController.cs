@@ -40,6 +40,7 @@ namespace Social_Mini_App.Controllers
                 UserId = userId,
                 PostContent = uploadDto.Content,
                 Privacy = uploadDto.Privacy,
+                GroupId = uploadDto.GroupId,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -62,6 +63,7 @@ namespace Social_Mini_App.Controllers
                 UserId = userId,
                 PostContent = uploadDto.Content,
                 Privacy = uploadDto.Privacy,
+                GroupId = uploadDto.GroupId,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -182,6 +184,15 @@ namespace Social_Mini_App.Controllers
         {
             var currentUserId = GetCurrentUserId();
             var posts = await _postService.GetPostsByUserIdAsync(userId, currentUserId);
+            return Ok(ApiResponse<List<PostResponse>>.Ok(posts));
+        }
+
+        // 7. LẤY BÀI VIẾT CỦA NHÓM
+        [HttpGet("group/{groupId}")]
+        public async Task<IActionResult> GetGroupPosts(Guid groupId)
+        {
+            var currentUserId = GetCurrentUserId();
+            var posts = await _postService.GetGroupPostsAsync(groupId, currentUserId);
             return Ok(ApiResponse<List<PostResponse>>.Ok(posts));
         }
 

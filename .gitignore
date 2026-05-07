@@ -23,3 +23,6 @@ Social_Mini_App/appsettings.Development.json
 
 ## [Docker]
 docker-compose.override.yml
+
+## [Migrations]
+Social_Mini_App/Migrations/

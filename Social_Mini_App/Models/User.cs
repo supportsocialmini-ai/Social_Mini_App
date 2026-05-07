@@ -33,12 +33,14 @@ namespace MiniSocialNetwork.Models
 
         public string? Gender { get; set; } // "Male", "Female", "Other"
         public DateTime? DateOfBirth { get; set; }
+        public string? PhoneNumber { get; set; }
 
         public bool IsVerified { get; set; } = false;
         public bool IsActive { get; set; } = true;
         public string? VerificationToken { get; set; }
         public string? PasswordResetToken { get; set; }
         public DateTime? ResetTokenExpires { get; set; }
+        public string? Interests { get; set; } // Ví dụ: "Công nghệ, Đánh cầu, Du lịch"
 
         // Ẩn luôn CreatedAt vì Server tự gán giờ hệ thống
         [JsonIgnore]
@@ -49,6 +51,7 @@ namespace MiniSocialNetwork.Models
 
         // Link to Premium Subscriptions
         public virtual ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
+        public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
         // Flattened list of features for Frontend usage
         [NotMapped]

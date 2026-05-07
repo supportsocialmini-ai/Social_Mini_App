@@ -32,5 +32,9 @@ namespace Social_Mini_App.Models
         // Navigation properties
         public virtual ICollection<ConversationParticipant> Participants { get; set; } = new List<ConversationParticipant>();
         public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
+
+        public Guid? GroupId { get; set; }
+        [ForeignKey("GroupId")]
+        public virtual Group? Group { get; set; }
     }
 }

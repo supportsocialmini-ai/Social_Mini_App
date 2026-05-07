@@ -26,6 +26,10 @@ namespace Social_Mini_App.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
+        public Guid? GroupId { get; set; } // Nếu null là bài đăng cá nhân, nếu có là bài đăng trong nhóm
+        [ForeignKey("GroupId")]
+        public virtual Group? Group { get; set; }
+
         // Quan hệ: Một bài viết thuộc về một User
         // Dùng [JsonIgnore] để khi lấy bài viết nó không lôi cả cục User ra gây vòng lặp vô tận
         [ForeignKey("UserId")]
