@@ -8,6 +8,7 @@ namespace Social_Mini_App.Controllers
     {
         // Endpoint dùng để ping giữ cho server Render không bị ngủ
         [HttpGet("ping")]
+        [HttpHead("ping")]
         public IActionResult Ping()
         {
             return Ok(new { 

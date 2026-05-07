@@ -101,7 +101,7 @@ namespace Social_Mini_App.Controllers
 
         // 2c. SHARE BÀI VIẾT
         [HttpPost("{id}/share")]
-        public async Task<IActionResult> Share(Guid id, [FromBody] PostUploadDto shareDto)
+        public async Task<IActionResult> Share(Guid id, [FromBody] ShareRequest shareDto)
         {
             var userId = GetCurrentUserId();
             if (userId == Guid.Empty) return Unauthorized(ApiResponse<string>.Fail("Unauthorized"));
