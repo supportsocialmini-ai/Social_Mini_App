@@ -28,6 +28,7 @@ namespace MiniSocialNetwork.Data
         public DbSet<SubscriptionPackage> SubscriptionPackages { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<GroupMember> GroupMembers { get; set; }
+        public DbSet<Share> Shares { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -216,11 +217,23 @@ namespace MiniSocialNetwork.Data
                 }
             );
 
-            modelBuilder.Entity<Post>()
-                .HasOne(p => p.OriginalPost)
+            modelBuilder.Entity<Share>()
+                .HasOne(s => s.User)
                 .WithMany()
-                .HasForeignKey(p => p.OriginalPostId)
+                .HasForeignKey(s => s.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Share>()
+                .HasOne(s => s.OriginalPost)
+                .WithMany(p => p.Shares)
+                .HasForeignKey(s => s.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Share>()
+                .HasOne(s => s.Group)
+                .WithMany()
+                .HasForeignKey(s => s.GroupId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Group Configuration
             modelBuilder.Entity<GroupMember>()

@@ -110,16 +110,16 @@ namespace Social_Mini_App.Controllers
             if (originalPost == null) 
                 return NotFound(ApiResponse<string>.Fail(PostMsg.Get.NotFound));
 
-            var post = new Post
+            var share = new Share
             {
                 UserId = userId,
-                PostContent = shareDto.Content,
-                Privacy = shareDto.Privacy,
-                CreatedAt = DateTime.UtcNow,
-                OriginalPostId = id // Gắn ID bài viết gốc
+                PostId = id,
+                Content = shareDto.Content,
+                GroupId = shareDto.GroupId,
+                CreatedAt = DateTime.UtcNow
             };
 
-            if (await _postService.CreatePostAsync(post))
+            if (await _postService.SharePostAsync(share))
                 return Ok(ApiResponse<string>.Ok(PostMsg.Upsert.CreateSuccess));
 
             return BadRequest(ApiResponse<string>.Fail(PostMsg.Upsert.CreateFail));

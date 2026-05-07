@@ -16,6 +16,9 @@ namespace Social_Mini_App.Dtos.Responses
         public int CommentCount { get; set; }
 
         // Mở rộng cho chức năng Share
+        public bool IsShare { get; set; }
+        public Guid? ShareId { get; set; }
+        public string? ShareContent { get; set; }
         public Guid? OriginalPostId { get; set; }
         public PostResponse? OriginalPost { get; set; }
 

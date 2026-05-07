@@ -14,5 +14,6 @@ namespace Social_Mini_App.Interfaces
         Task<List<PostResponse>> GetPostsByUserIdAsync(Guid userId, Guid currentUserId);
         Task<List<PostResponse>> GetGroupPostsAsync(Guid groupId, Guid currentUserId);
         Task<List<UserSummaryDto>> GetPostLikesAsync(Guid postId);
+        Task<bool> SharePostAsync(Share share);
     }
 }
