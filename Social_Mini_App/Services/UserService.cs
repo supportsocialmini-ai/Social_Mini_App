@@ -21,7 +21,7 @@ namespace Social_Mini_App.Services
                     .ThenInclude(ur => ur.Role)
                 .Include(u => u.Subscriptions)
                     .ThenInclude(s => s.Package)
-                .FirstOrDefaultAsync(u => u.UserId == id);
+                .FirstOrDefaultAsync(u => u.UserId == id && !u.IsDeleted);
 
             if (user != null)
             {
@@ -44,7 +44,16 @@ namespace Social_Mini_App.Services
 
         public async Task<List<User>> GetAllUsersAsync()
         {
-            return await _context.Users.ToListAsync();
+            return await _context.Users.Where(u => !u.IsDeleted).ToListAsync();
+        }
+
+        public async Task<bool> DeactivateUserAsync(Guid id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return false;
+
+            user.IsDeleted = true;
+            return await _context.SaveChangesAsync() > 0;
         }
     }
 }

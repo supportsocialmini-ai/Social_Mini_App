@@ -41,6 +41,7 @@ namespace MiniSocialNetwork.Models
         public string? PasswordResetToken { get; set; }
         public DateTime? ResetTokenExpires { get; set; }
         public string? Interests { get; set; } // Ví dụ: "Công nghệ, Đánh cầu, Du lịch"
+        public bool IsDeleted { get; set; } = false; // Đánh dấu người dùng tự xóa tài khoản
 
         // Ẩn luôn CreatedAt vì Server tự gán giờ hệ thống
         [JsonIgnore]

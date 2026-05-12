@@ -97,6 +97,9 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             throw new Exception(AuthMsg.Login.UserBanned);
 
+        if (user.IsDeleted)
+            throw new Exception(AuthMsg.Login.UserDeleted);
+
         var roles = await _context.UserRoles
             .Where(ur => ur.UserId == user.UserId)
             .Select(ur => ur.Role.Name)
@@ -177,6 +180,16 @@ public class AuthService : IAuthService
         user.PasswordResetToken = null;
         user.ResetTokenExpires = null;
 
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeactivateAccountAsync(Guid userId)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+        if (user == null) return false;
+
+        user.IsDeleted = true;
         await _context.SaveChangesAsync();
         return true;
     }

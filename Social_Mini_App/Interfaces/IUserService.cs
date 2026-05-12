@@ -7,5 +7,6 @@ namespace Social_Mini_App.Interfaces
         Task<User?> GetUserByIdAsync(Guid id);
         Task<bool> UpdateUserAsync(User user);
         Task<List<User>> GetAllUsersAsync();
+        Task<bool> DeactivateUserAsync(Guid id);
     }
 }

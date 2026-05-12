@@ -132,6 +132,26 @@ namespace Social_Mini_App.Controllers
             return Ok(ApiResponse<object>.Ok(new { avatarUrl, user = userInDb }));
         }
 
+        [HttpDelete("me")]
+        public async Task<IActionResult> DeleteProfile([FromBody] VerifyPasswordRequest request)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == Guid.Empty) return Unauthorized(ApiResponse<object>.Fail("Unauthorized"));
+
+            var user = await _userService.GetUserByIdAsync(userId);
+            if (user == null) return NotFound(ApiResponse<object>.Fail(UserMsg.Profile.NotFound));
+
+            // Xác nhận mật khẩu trước khi cho xóa
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+                return BadRequest(ApiResponse<object>.Fail(AuthMsg.Password.VerifyFail));
+
+            var result = await _userService.DeactivateUserAsync(userId);
+            if (result)
+                return Ok(ApiResponse<object>.Ok(new { message = "Tài khoản của bạn đã được vô hiệu hóa thành công." }));
+
+            return BadRequest(ApiResponse<object>.Fail("Không thể vô hiệu hóa tài khoản lúc này."));
+        }
+
         [HttpGet("Avatar/{fileName}")]
         [AllowAnonymous]
         public IActionResult GetAvatar(string fileName)

@@ -11,5 +11,6 @@ namespace MiniSocialNetwork.Interfaces
         Task<bool> VerifyPasswordAsync(Guid userId, string password);
         Task<string> ForgotPasswordAsync(string email);
         Task<bool> ResetPasswordAsync(string token, string newPassword);
+        Task<bool> DeactivateAccountAsync(Guid userId);
     }
 }
