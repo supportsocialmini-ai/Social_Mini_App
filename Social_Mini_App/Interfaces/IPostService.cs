@@ -5,7 +5,7 @@ namespace Social_Mini_App.Interfaces
 {
     public interface IPostService
     {
-        Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId);
+        Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId, int page = 1, int pageSize = 10);
         Task<Post?> GetPostByIdAsync(Guid id);
         Task<bool> CreatePostAsync(Post post);
         Task<bool> UpdatePostAsync(Post post);

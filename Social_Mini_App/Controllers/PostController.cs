@@ -21,10 +21,10 @@ namespace Social_Mini_App.Controllers
 
         // 1. LẤY NEWSFEED
         [HttpGet]
-        public async Task<IActionResult> GetNewsfeed()
+        public async Task<IActionResult> GetNewsfeed([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             var currentUserId = GetCurrentUserId();
-            var posts = await _postService.GetNewsfeedAsync(currentUserId);
+            var posts = await _postService.GetNewsfeedAsync(currentUserId, page, pageSize);
             return Ok(ApiResponse<List<PostResponse>>.Ok(posts));
         }
 

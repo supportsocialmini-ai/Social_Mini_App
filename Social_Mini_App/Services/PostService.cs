@@ -11,8 +11,7 @@ namespace Social_Mini_App.Services
         private readonly DataContext _context;
         public PostService(DataContext context) => _context = context;
 
-        // 1. Lấy Newsfeed
-        public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId)
+public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId, int page = 1, int pageSize = 10)
         {
             var friendsIds = await GetFriendsIdsAsync(currentUserId);
             var joinedGroupIds = await _context.GroupMembers
@@ -84,11 +83,14 @@ namespace Social_Mini_App.Services
                 })
                 .ToListAsync();
 
-            return posts.Concat(shares)
+            var combined = posts.Concat(shares)
                 .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToList();
-        }
 
+            return combined;
+        }
         // 2. Lấy bài viết của CHÍNH TÔI
         public async Task<List<PostResponse>> GetMyPostsAsync(Guid userId, Guid currentUserId)
         {
