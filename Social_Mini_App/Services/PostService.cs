@@ -11,7 +11,7 @@ namespace Social_Mini_App.Services
         private readonly DataContext _context;
         public PostService(DataContext context) => _context = context;
 
-public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId, int page = 1, int pageSize = 10)
+        public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId, int page = 1, int pageSize = 10)
         {
             var friendsIds = await GetFriendsIdsAsync(currentUserId);
             var joinedGroupIds = await _context.GroupMembers
@@ -19,78 +19,108 @@ public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId, int p
                 .Select(gm => gm.GroupId)
                 .ToListAsync();
 
-            // Lấy Posts riêng
-            var posts = await _context.Posts
+            // 1. Phân trang hoàn toàn ở cấp Database sử dụng Union các ID và CreatedAt
+            var postsQuery = _context.Posts
                 .Where(p => (p.GroupId == null || joinedGroupIds.Contains(p.GroupId.Value)) &&
                          (p.UserId == currentUserId 
-                          || p.Privacy == "Public" 
-                          || (p.Privacy == "Friends" && friendsIds.Contains(p.UserId))))
-                .Select(p => new PostResponse
-                {
-                    PostId = p.PostId,
-                    PostContent = p.PostContent,
-                    CreatedAt = p.CreatedAt,
-                    UserId = p.UserId,
-                    FullName = p.User!.FullName ?? p.User.Username,
-                    AvatarUrl = p.User.AvatarUrl,
-                    ImageUrl = p.ImageUrl,
-                    Privacy = p.Privacy,
-                    LikeCount = p.Likes.Count(),
-                    IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
-                    CommentCount = p.Comments.Count(),
-                    GroupId = p.GroupId,
-                    GroupName = p.Group != null ? p.Group.Name : null,
-                    IsShare = false
-                })
-                .ToListAsync();
+                           || p.Privacy == "Public" 
+                           || (p.Privacy == "Friends" && friendsIds.Contains(p.UserId))))
+                .Select(p => new { Id = p.PostId, CreatedAt = p.CreatedAt, IsShare = false });
 
-            // Lấy Shares riêng
-            var shares = await _context.Shares
+            var sharesQuery = _context.Shares
                 .Where(s => (s.GroupId == null || joinedGroupIds.Contains(s.GroupId.Value)) &&
                          (s.UserId == currentUserId 
                           || s.OriginalPost!.Privacy == "Public" 
                           || (s.OriginalPost.Privacy == "Friends" && friendsIds.Contains(s.UserId))))
-                .Select(s => new PostResponse
-                {
-                    PostId = s.ShareId,
-                    PostContent = string.Empty,
-                    CreatedAt = s.CreatedAt,
-                    UserId = s.UserId,
-                    FullName = s.User!.FullName ?? s.User.Username,
-                    AvatarUrl = s.User.AvatarUrl,
-                    ImageUrl = null,
-                    Privacy = s.OriginalPost!.Privacy,
-                    LikeCount = s.OriginalPost.Likes.Count(),
-                    IsLiked = s.OriginalPost.Likes.Any(l => l.UserId == currentUserId),
-                    CommentCount = s.OriginalPost.Comments.Count(),
-                    GroupId = s.GroupId,
-                    GroupName = s.Group != null ? s.Group.Name : null,
-                    IsShare = true,
-                    ShareId = s.ShareId,
-                    ShareContent = s.Content,
-                    OriginalPostId = s.PostId,
-                    OriginalPost = new PostResponse
-                    {
-                        PostId = s.OriginalPost.PostId,
-                        PostContent = s.OriginalPost.PostContent,
-                        CreatedAt = s.OriginalPost.CreatedAt,
-                        UserId = s.OriginalPost.UserId,
-                        FullName = s.OriginalPost.User!.FullName ?? s.OriginalPost.User.Username,
-                        AvatarUrl = s.OriginalPost.User.AvatarUrl,
-                        ImageUrl = s.OriginalPost.ImageUrl,
-                        Privacy = s.OriginalPost.Privacy
-                    }
-                })
-                .ToListAsync();
+                .Select(s => new { Id = s.ShareId, CreatedAt = s.CreatedAt, IsShare = true });
 
-            var combined = posts.Concat(shares)
-                .OrderByDescending(p => p.CreatedAt)
+            var paginatedItems = await postsQuery.Union(sharesQuery)
+                .OrderByDescending(x => x.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .ToListAsync();
+
+            if (!paginatedItems.Any())
+            {
+                return new List<PostResponse>();
+            }
+
+            var postIds = paginatedItems.Where(x => !x.IsShare).Select(x => x.Id).ToList();
+            var shareIds = paginatedItems.Where(x => x.IsShare).Select(x => x.Id).ToList();
+
+            // 2. Chỉ query dữ liệu chi tiết cho đúng các items được chọn
+            List<PostResponse> posts = new List<PostResponse>();
+            if (postIds.Any())
+            {
+                posts = await _context.Posts
+                    .Where(p => postIds.Contains(p.PostId))
+                    .Select(p => new PostResponse
+                    {
+                        PostId = p.PostId,
+                        PostContent = p.PostContent,
+                        CreatedAt = p.CreatedAt,
+                        UserId = p.UserId,
+                        FullName = p.User!.FullName ?? p.User.Username,
+                        AvatarUrl = p.User.AvatarUrl,
+                        ImageUrl = p.ImageUrl,
+                        Privacy = p.Privacy,
+                        LikeCount = p.Likes.Count(),
+                        IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
+                        CommentCount = p.Comments.Count(),
+                        GroupId = p.GroupId,
+                        GroupName = p.Group != null ? p.Group.Name : null,
+                        IsShare = false
+                    })
+                    .ToListAsync();
+            }
+
+            List<PostResponse> shares = new List<PostResponse>();
+            if (shareIds.Any())
+            {
+                shares = await _context.Shares
+                    .Where(s => shareIds.Contains(s.ShareId))
+                    .Select(s => new PostResponse
+                    {
+                        PostId = s.ShareId,
+                        PostContent = string.Empty,
+                        CreatedAt = s.CreatedAt,
+                        UserId = s.UserId,
+                        FullName = s.User!.FullName ?? s.User.Username,
+                        AvatarUrl = s.User.AvatarUrl,
+                        ImageUrl = null,
+                        Privacy = s.OriginalPost!.Privacy,
+                        LikeCount = s.OriginalPost.Likes.Count(),
+                        IsLiked = s.OriginalPost.Likes.Any(l => l.UserId == currentUserId),
+                        CommentCount = s.OriginalPost.Comments.Count(),
+                        GroupId = s.GroupId,
+                        GroupName = s.Group != null ? s.Group.Name : null,
+                        IsShare = true,
+                        ShareId = s.ShareId,
+                        ShareContent = s.Content,
+                        OriginalPostId = s.PostId,
+                        OriginalPost = new PostResponse
+                        {
+                            PostId = s.OriginalPost.PostId,
+                            PostContent = s.OriginalPost.PostContent,
+                            CreatedAt = s.OriginalPost.CreatedAt,
+                            UserId = s.OriginalPost.UserId,
+                            FullName = s.OriginalPost.User!.FullName ?? s.OriginalPost.User.Username,
+                            AvatarUrl = s.OriginalPost.User.AvatarUrl,
+                            ImageUrl = s.OriginalPost.ImageUrl,
+                            Privacy = s.OriginalPost.Privacy
+                        }
+                    })
+                    .ToListAsync();
+            }
+
+            // 3. Kết hợp và sắp xếp lại đúng thứ tự CreatedAt
+            var combined = posts.Concat(shares)
+                .OrderByDescending(p => p.CreatedAt)
                 .ToList();
 
             return combined;
         }
+
         // 2. Lấy bài viết của CHÍNH TÔI
         public async Task<List<PostResponse>> GetMyPostsAsync(Guid userId, Guid currentUserId)
         {
