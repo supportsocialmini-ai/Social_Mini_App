@@ -18,12 +18,19 @@ namespace Social_Mini_App.Services
 
         public async Task<bool> ToggleLikeAsync(Guid postId, Guid userId)
         {
-            // 1. Kiểm tra xem thằng này đã Like bài này chưa
-            var existingLike = await _context.Likes
-                .FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
+            // Nếu postId thực chất là ShareId, chuyển hướng về Post gốc
+            var share = await _context.Shares.FindAsync(postId);
+            if (share != null)
+            {
+                postId = share.PostId;
+            }
 
             var post = await _context.Posts.FindAsync(postId);
             if (post == null) return false;
+
+            // 1. Kiểm tra xem thằng này đã Like bài này chưa
+            var existingLike = await _context.Likes
+                .FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
 
             if (existingLike != null)
             {

@@ -14,6 +14,13 @@ namespace Social_Mini_App.Services
         // 1. LẤY DANH SÁCH BÌNH LUẬN THEO POST ID (Cấu trúc 2 tầng: Comment -> Replies)
         public async Task<List<CommentResponse>> GetCommentsByPostIdAsync(Guid postId)
         {
+            // Nếu postId thực chất là ShareId, chuyển hướng về Post gốc
+            var share = await _context.Shares.FindAsync(postId);
+            if (share != null)
+            {
+                postId = share.PostId;
+            }
+
             return await _context.Comments
                 .Where(c => c.PostId == postId)
                 .Include(c => c.User)
@@ -46,6 +53,19 @@ namespace Social_Mini_App.Services
         // 2. TẠO BÌNH LUẬN MỚI
         public async Task<CommentResponse?> CreateCommentAsync(Comment comment)
         {
+            // Nếu comment.PostId thực chất là ShareId, chuyển hướng về Post gốc
+            var share = await _context.Shares.FindAsync(comment.PostId);
+            if (share != null)
+            {
+                comment.PostId = share.PostId;
+            }
+
+            // Kiểm tra bài viết có tồn tại trong DB không để tránh lỗi FK 500
+            var postExists = await _context.Posts.AnyAsync(p => p.PostId == comment.PostId);
+            if (!postExists) return null;
+
+            comment.CommentId = comment.CommentId == Guid.Empty ? Guid.NewGuid() : comment.CommentId;
+
             _context.Comments.Add(comment);
             if (await _context.SaveChangesAsync() > 0)
             {
@@ -115,4 +135,4 @@ namespace Social_Mini_App.Services
             return await _context.SaveChangesAsync() > 0;
         }
     }
-}
+}

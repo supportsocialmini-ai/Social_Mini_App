@@ -60,9 +60,9 @@ public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId, int p
                     AvatarUrl = s.User.AvatarUrl,
                     ImageUrl = null,
                     Privacy = s.OriginalPost!.Privacy,
-                    LikeCount = 0,
-                    IsLiked = false,
-                    CommentCount = 0,
+                    LikeCount = s.OriginalPost.Likes.Count(),
+                    IsLiked = s.OriginalPost.Likes.Any(l => l.UserId == currentUserId),
+                    CommentCount = s.OriginalPost.Comments.Count(),
                     GroupId = s.GroupId,
                     GroupName = s.Group != null ? s.Group.Name : null,
                     IsShare = true,
@@ -127,9 +127,9 @@ public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId, int p
                     AvatarUrl = s.User.AvatarUrl,
                     ImageUrl = null,
                     Privacy = s.OriginalPost!.Privacy,
-                    LikeCount = 0,
-                    IsLiked = false,
-                    CommentCount = 0,
+                    LikeCount = s.OriginalPost.Likes.Count(),
+                    IsLiked = s.OriginalPost.Likes.Any(l => l.UserId == currentUserId),
+                    CommentCount = s.OriginalPost.Comments.Count(),
                     GroupId = s.GroupId,
                     GroupName = s.Group != null ? s.Group.Name : null,
                     IsShare = true,
@@ -205,9 +205,9 @@ public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId, int p
                     AvatarUrl = s.User.AvatarUrl,
                     ImageUrl = null,
                     Privacy = s.OriginalPost!.Privacy,
-                    LikeCount = 0,
-                    IsLiked = false,
-                    CommentCount = 0,
+                    LikeCount = s.OriginalPost.Likes.Count(),
+                    IsLiked = s.OriginalPost.Likes.Any(l => l.UserId == currentUserId),
+                    CommentCount = s.OriginalPost.Comments.Count(),
                     GroupId = s.GroupId,
                     GroupName = s.Group != null ? s.Group.Name : null,
                     IsShare = true,
@@ -268,9 +268,9 @@ public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId, int p
                     AvatarUrl = s.User.AvatarUrl,
                     ImageUrl = null,
                     Privacy = s.OriginalPost!.Privacy,
-                    LikeCount = 0,
-                    IsLiked = false,
-                    CommentCount = 0,
+                    LikeCount = s.OriginalPost.Likes.Count(),
+                    IsLiked = s.OriginalPost.Likes.Any(l => l.UserId == currentUserId),
+                    CommentCount = s.OriginalPost.Comments.Count(),
                     GroupId = s.GroupId,
                     GroupName = s.Group != null ? s.Group.Name : null,
                     IsShare = true,
@@ -335,6 +335,12 @@ public async Task<List<PostResponse>> GetNewsfeedAsync(Guid currentUserId, int p
 
         public async Task<List<UserSummaryDto>> GetPostLikesAsync(Guid postId)
         {
+            var share = await _context.Shares.FindAsync(postId);
+            if (share != null)
+            {
+                postId = share.PostId;
+            }
+
             return await _context.Likes
                 .Where(l => l.PostId == postId)
                 .Include(l => l.User)

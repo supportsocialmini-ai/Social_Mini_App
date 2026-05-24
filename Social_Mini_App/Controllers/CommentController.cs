@@ -43,7 +43,7 @@ namespace Social_Mini_App.Controllers
             var result = await _commentService.CreateCommentAsync(comment);
 
             if (result != null) return Ok(ApiResponse<CommentResponse>.Ok(result));
-            return BadRequest(ApiResponse<CommentResponse>.Fail(CommentMsg.Upsert.CreateFail));
+            return NotFound(ApiResponse<CommentResponse>.Fail("Bài viết không tồn tại hoặc đã bị xóa."));
         }
 
         [HttpPost("reply")]
@@ -95,4 +95,4 @@ namespace Social_Mini_App.Controllers
             return BadRequest(ApiResponse<string>.Fail("Xóa phản hồi thất bại!"));
         }
     }
-}
+}
