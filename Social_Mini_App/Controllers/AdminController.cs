@@ -97,12 +97,19 @@ namespace Social_Mini_App.Controllers
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? searchTerm = null)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
 
             var query = _context.Users.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim().ToLower();
+                query = query.Where(u => u.FullName.ToLower().Contains(term) || u.Username.ToLower().Contains(term) || u.Email.ToLower().Contains(term));
+            }
+
             var totalUsers = await query.CountAsync();
 
             var users = await query
@@ -228,6 +235,193 @@ namespace Social_Mini_App.Controllers
             await _context.SaveChangesAsync();
             return Ok(ApiResponse<string>.Ok("Đã xóa nhóm thành công"));
         }
+
+        [HttpGet("detailed-stats")]
+        public async Task<IActionResult> GetDetailedStats([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            var start = startDate ?? DateTime.Now.AddDays(-30);
+            var end = endDate ?? DateTime.Now;
+
+            start = start.Date;
+            end = end.Date.AddDays(1).AddTicks(-1);
+
+            // 1. Get raw records in date range
+            var usersList = await _context.Users
+                .Where(u => u.CreatedAt >= start && u.CreatedAt <= end)
+                .Select(u => new { u.UserId, u.Username, u.FullName, u.Email, u.CreatedAt })
+                .ToListAsync();
+
+            var postsList = await _context.Posts
+                .Where(p => p.CreatedAt >= start && p.CreatedAt <= end)
+                .Select(p => new { p.PostId, p.PostContent, p.CreatedAt, p.UserId })
+                .ToListAsync();
+
+            var premiumSubsList = await _context.Subscriptions
+                .Include(s => s.Package)
+                .Where(s => s.Tier == "Premium" && s.CreatedAt >= start && s.CreatedAt <= end)
+                .Select(s => new { s.Id, s.UserId, s.Tier, PackageName = s.Package != null ? s.Package.Name : "Premium", s.CreatedAt })
+                .ToListAsync();
+
+            var reportsList = await (
+                from r in _context.Reports
+                join p in _context.Posts on r.TargetId equals p.PostId
+                join u in _context.Users on p.UserId equals u.UserId
+                where r.TargetType == "Post" && r.CreatedAt >= start && r.CreatedAt <= end
+                select new
+                {
+                    r.ReportId,
+                    r.TargetId,
+                    r.ReporterId,
+                    PostAuthorId = p.UserId,
+                    PostAuthorName = u.FullName,
+                    PostAuthorUsername = u.Username,
+                    PostAuthorEmail = u.Email,
+                    r.Reason,
+                    r.Description,
+                    r.CreatedAt
+                }
+            ).ToListAsync();
+
+            // 2. Aggregate counts by date (Day-Month-Year)
+            var dailyData = new List<object>();
+            for (var date = start.Date; date <= end.Date; date = date.AddDays(1))
+            {
+                var dayStart = date;
+                var dayEnd = date.AddDays(1).AddTicks(-1);
+
+                var joined = usersList.Count(u => u.CreatedAt >= dayStart && u.CreatedAt <= dayEnd);
+                var posts = postsList.Count(p => p.CreatedAt >= dayStart && p.CreatedAt <= dayEnd);
+                var premiums = premiumSubsList.Count(s => s.CreatedAt >= dayStart && s.CreatedAt <= dayEnd);
+                var reported = reportsList.Count(r => r.CreatedAt >= dayStart && r.CreatedAt <= dayEnd);
+
+                dailyData.Add(new
+                {
+                    Date = date.ToString("yyyy-MM-dd"),
+                    JoinedUsers = joined,
+                    CreatedPosts = posts,
+                    PremiumRegistrations = premiums,
+                    ReportedPosts = reported
+                });
+            }
+
+            // 3. Detailed events list
+            var events = new List<DetailedEventDto>();
+
+            // Get other users involved to load their details (creators/subscribers)
+            var userIdsToFetch = postsList.Select(p => p.UserId)
+                .Concat(premiumSubsList.Select(s => s.UserId))
+                .Concat(reportsList.Select(r => r.ReporterId))
+                .Distinct()
+                .ToList();
+
+            var usersMap = await _context.Users
+                .Where(u => userIdsToFetch.Contains(u.UserId))
+                .ToDictionaryAsync(u => u.UserId, u => new { u.FullName, u.Username, u.Email });
+
+            // Add registers
+            foreach (var u in usersList)
+            {
+                events.Add(new DetailedEventDto
+                {
+                    Type = "Register",
+                    TypeName = "Đăng ký tài khoản",
+                    UserId = u.UserId,
+                    FullName = u.FullName,
+                    Username = u.Username,
+                    Email = u.Email,
+                    Time = u.CreatedAt,
+                    Details = "Đăng ký tài khoản mới"
+                });
+            }
+
+            // Add posts
+            foreach (var p in postsList)
+            {
+                usersMap.TryGetValue(p.UserId, out var creator);
+                events.Add(new DetailedEventDto
+                {
+                    Type = "Post",
+                    TypeName = "Đăng bài viết",
+                    UserId = p.UserId,
+                    FullName = creator?.FullName ?? "Không xác định",
+                    Username = creator?.Username ?? "unknown",
+                    Email = creator?.Email ?? "",
+                    Time = p.CreatedAt,
+                    Details = p.PostContent.Length > 100 ? p.PostContent.Substring(0, 100) + "..." : p.PostContent
+                });
+            }
+
+            // Add premium subs
+            foreach (var s in premiumSubsList)
+            {
+                usersMap.TryGetValue(s.UserId, out var subscriber);
+                events.Add(new DetailedEventDto
+                {
+                    Type = "Premium",
+                    TypeName = "Đăng ký Premium",
+                    UserId = s.UserId,
+                    FullName = subscriber?.FullName ?? "Không xác định",
+                    Username = subscriber?.Username ?? "unknown",
+                    Email = subscriber?.Email ?? "",
+                    Time = s.CreatedAt,
+                    Details = $"Đăng ký gói nâng cấp: {s.PackageName}"
+                });
+            }
+
+            // Add reports
+            foreach (var r in reportsList)
+            {
+                events.Add(new DetailedEventDto
+                {
+                    Type = "Report",
+                    TypeName = "Bài viết bị báo cáo",
+                    UserId = r.PostAuthorId,
+                    FullName = r.PostAuthorName,
+                    Username = r.PostAuthorUsername,
+                    Email = r.PostAuthorEmail,
+                    Time = r.CreatedAt,
+                    Details = $"Bài viết (ID: {r.TargetId}) bị báo cáo. Lý do: {r.Reason}. Chi tiết: {r.Description}"
+                });
+            }
+
+            // Sort events by Time descending
+            var sortedEvents = events
+                .OrderByDescending(e => e.Time)
+                .Select(e => new
+                {
+                    e.Type,
+                    e.TypeName,
+                    e.UserId,
+                    e.FullName,
+                    e.Username,
+                    e.Email,
+                    Time = e.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                    e.Details
+                })
+                .ToList();
+
+            return Ok(ApiResponse<object>.Ok(new
+            {
+                DailyStats = dailyData,
+                Events = sortedEvents,
+                TotalJoined = usersList.Count,
+                TotalPosts = postsList.Count,
+                TotalPremiums = premiumSubsList.Count,
+                TotalReports = reportsList.Count
+            }));
+        }
+    }
+
+    public class DetailedEventDto
+    {
+        public string Type { get; set; } = string.Empty;
+        public string TypeName { get; set; } = string.Empty;
+        public Guid UserId { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public DateTime Time { get; set; }
+        public string Details { get; set; } = string.Empty;
     }
 
     public class UpdatePackageRequest
