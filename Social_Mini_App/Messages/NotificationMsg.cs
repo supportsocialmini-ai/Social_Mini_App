@@ -8,5 +8,6 @@ public static class NotificationMsg
         public const string Comment = "Notification.Action.Comment";
         public const string FriendRequest = "Notification.Action.FriendRequest";
         public const string FriendAccept = "Notification.Action.FriendAccept";
+        public const string GroupInvite = "Notification.Action.GroupInvite";
     }
 }

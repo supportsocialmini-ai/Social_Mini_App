@@ -128,5 +128,16 @@ namespace Social_Mini_App.Controllers
             var groups = await _groupService.GetSuggestedGroupsAsync(userId);
             return Ok(ApiResponse<IEnumerable<Group>>.Ok(groups));
         }
+
+        [HttpPost("{id}/members/{friendId}/invite")]
+        public async Task<IActionResult> InviteMember(Guid id, Guid friendId)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _groupService.InviteToGroupAsync(userId, id, friendId);
+            if (!result)
+                return BadRequest(ApiResponse<string>.Fail(GroupMsg.Member.InviteFail));
+
+            return Ok(ApiResponse<string>.Ok(GroupMsg.Member.InviteSuccess));
+        }
     }
 }

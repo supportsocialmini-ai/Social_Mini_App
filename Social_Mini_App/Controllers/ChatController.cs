@@ -400,7 +400,9 @@ public class ChatController : ControllerBase
         var participant = await _context.ConversationParticipants
             .FirstOrDefaultAsync(cp => cp.ConversationId == groupId && cp.UserId == currentUserId);
 
-        if (participant == null || !participant.IsAdmin)
+        bool isSystemAdmin = User.IsInRole("Admin");
+
+        if ((participant == null || !participant.IsAdmin) && !isSystemAdmin)
             return Forbid();
 
         var group = await _context.Conversations.FindAsync(groupId);
@@ -423,7 +425,9 @@ public class ChatController : ControllerBase
         var requester = await _context.ConversationParticipants
             .FirstOrDefaultAsync(cp => cp.ConversationId == groupId && cp.UserId == currentUserId);
 
-        if (requester == null || !requester.IsAdmin)
+        bool isSystemAdmin = User.IsInRole("Admin");
+
+        if ((requester == null || !requester.IsAdmin) && !isSystemAdmin)
             return Forbid();
 
         var target = await _context.ConversationParticipants
@@ -437,7 +441,7 @@ public class ChatController : ControllerBase
         if (userId == group?.CreatorId)
             return BadRequest(ApiResponse<object>.Fail("Không thể xóa người sáng lập nhóm!"));
 
-        if (target.IsAdmin && currentUserId != group?.CreatorId)
+        if (target.IsAdmin && currentUserId != group?.CreatorId && !isSystemAdmin)
             return BadRequest(ApiResponse<object>.Fail("Chỉ người sáng lập mới có thể xóa Admin khác!"));
 
         _context.ConversationParticipants.Remove(target);

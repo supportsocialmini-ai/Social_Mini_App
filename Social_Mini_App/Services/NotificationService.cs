@@ -29,6 +29,7 @@ namespace Social_Mini_App.Services
                 "Comment" => NotificationMsg.Action.Comment,
                 "FriendRequest" => NotificationMsg.Action.FriendRequest,
                 "FriendAccept" => NotificationMsg.Action.FriendAccept,
+                "GroupInvite" => NotificationMsg.Action.GroupInvite,
                 _ => type
             };
  

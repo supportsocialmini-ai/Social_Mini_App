@@ -26,5 +26,7 @@ public static class GroupMsg
         public const string RemoveSuccess = "Group.Member.RemoveSuccess";
         public const string RemoveFail = "Group.Member.RemoveFail";
         public const string Unauthorized = "Group.Member.Unauthorized";
+        public const string InviteSuccess = "Group.Member.InviteSuccess";
+        public const string InviteFail = "Group.Member.InviteFail";
     }
 }

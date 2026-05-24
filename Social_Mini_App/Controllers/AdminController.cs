@@ -143,6 +143,78 @@ namespace Social_Mini_App.Controllers
 
             return Ok(ApiResponse<string>.Ok("Đã xóa bài viết bởi Admin"));
         }
+
+        [HttpGet("groups")]
+        public async Task<IActionResult> GetAllGroups()
+        {
+            var groups = await _context.Groups
+                .Include(g => g.Creator)
+                .Include(g => g.Members)
+                .OrderByDescending(g => g.CreatedAt)
+                .Select(g => new
+                {
+                    GroupId = g.GroupId,
+                    Name = g.Name,
+                    Description = g.Description,
+                    AvatarUrl = g.AvatarUrl,
+                    CoverUrl = g.CoverUrl,
+                    Privacy = g.Privacy,
+                    Category = g.Category,
+                    CreatedAt = g.CreatedAt,
+                    CreatedBy = g.CreatedBy,
+                    CreatorName = g.Creator != null ? g.Creator.FullName : "Không xác định",
+                    CreatorUsername = g.Creator != null ? g.Creator.Username : "unknown",
+                    MemberCount = g.Members.Count(m => m.Status == "Active")
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponse<object>.Ok(groups));
+        }
+
+        [HttpDelete("groups/{groupId}")]
+        public async Task<IActionResult> DeleteGroup(Guid groupId)
+        {
+            var group = await _context.Groups
+                .Include(g => g.Conversation)
+                .FirstOrDefaultAsync(g => g.GroupId == groupId);
+
+            if (group == null)
+                return NotFound(ApiResponse<string>.Fail("Không tìm thấy nhóm"));
+
+            // 1. Xóa các bài viết thuộc nhóm
+            var posts = await _context.Posts
+                .Where(p => p.GroupId == groupId)
+                .ToListAsync();
+            _context.Posts.RemoveRange(posts);
+
+            // 2. Xóa cuộc trò chuyện và tin nhắn
+            if (group.Conversation != null)
+            {
+                var participants = await _context.ConversationParticipants
+                    .Where(cp => cp.ConversationId == group.Conversation.ConversationId)
+                    .ToListAsync();
+                _context.ConversationParticipants.RemoveRange(participants);
+
+                var messages = await _context.Messages
+                    .Where(m => m.ConversationId == group.Conversation.ConversationId)
+                    .ToListAsync();
+                _context.Messages.RemoveRange(messages);
+
+                _context.Conversations.Remove(group.Conversation);
+            }
+
+            // 3. Xóa các thành viên nhóm
+            var members = await _context.GroupMembers
+                .Where(gm => gm.GroupId == groupId)
+                .ToListAsync();
+            _context.GroupMembers.RemoveRange(members);
+
+            // 4. Xóa chính nhóm đó
+            _context.Groups.Remove(group);
+
+            await _context.SaveChangesAsync();
+            return Ok(ApiResponse<string>.Ok("Đã xóa nhóm thành công"));
+        }
     }
 
     public class UpdatePackageRequest
