@@ -97,12 +97,20 @@ namespace Social_Mini_App.Controllers
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var users = await _context.Users
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var query = _context.Users.AsQueryable();
+            var totalUsers = await query.CountAsync();
+
+            var users = await query
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .OrderByDescending(u => u.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(u => new
                 {
                     u.UserId,
@@ -117,7 +125,12 @@ namespace Social_Mini_App.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(ApiResponse<object>.Ok(users));
+            return Ok(ApiResponse<object>.Ok(new {
+                totalCount = totalUsers,
+                page = page,
+                pageSize = pageSize,
+                users = users
+            }));
         }
 
         [HttpPost("users/{userId}/toggle-status")]
