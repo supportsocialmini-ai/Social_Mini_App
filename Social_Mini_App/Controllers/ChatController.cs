@@ -92,7 +92,9 @@ public class ChatController : ControllerBase
                 u.UserId,
                 u.Username,
                 FullName = u.FullName,
-                u.AvatarUrl
+                u.AvatarUrl,
+                ConversationId = x.ConversationId,
+                LastMessageTime = x.LastMessageTime
             })
             // Distinct in case there are multiple shared conversations (e.g. groups if enabled later)
             .Distinct()
@@ -448,5 +450,40 @@ public class ChatController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(ApiResponse<string>.Ok("Đã xóa thành viên khỏi nhóm!"));
+    }
+
+    [HttpDelete("conversation/{conversationId}")]
+    public async Task<IActionResult> DeleteConversation(Guid conversationId)
+    {
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (currentUserIdStr == null || !Guid.TryParse(currentUserIdStr, out var currentUserId)) 
+            return Unauthorized(ApiResponse<string>.Fail(UserMsg.Profile.Unauthorized));
+
+        var participant = await _context.ConversationParticipants
+            .FirstOrDefaultAsync(cp => cp.ConversationId == conversationId && cp.UserId == currentUserId);
+
+        if (participant == null)
+            return NotFound(ApiResponse<string>.Fail("Không tìm thấy đoạn chat hoặc bạn không tham gia!"));
+
+        _context.ConversationParticipants.Remove(participant);
+        await _context.SaveChangesAsync();
+
+        var remainingParticipants = await _context.ConversationParticipants
+            .AnyAsync(cp => cp.ConversationId == conversationId);
+
+        if (!remainingParticipants)
+        {
+            var messages = _context.Messages.Where(m => m.ConversationId == conversationId);
+            _context.Messages.RemoveRange(messages);
+
+            var conversation = await _context.Conversations.FindAsync(conversationId);
+            if (conversation != null)
+            {
+                _context.Conversations.Remove(conversation);
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        return Ok(ApiResponse<string>.Ok("Đã xóa đoạn chat thành công!"));
     }
 }

@@ -15,14 +15,22 @@ namespace Social_Mini_App.Services
             _context = context;
         }
 
-        public async Task<SearchResultResponse> SearchAsync(string query, Guid currentUserId)
+        public async Task<SearchResultResponse> SearchAsync(string query, Guid currentUserId, string? interest = null)
         {
             var q = query.Trim().ToLower();
 
             // Tìm kiếm người dùng theo FullName hoặc Username
-            var users = await _context.Users
+            var usersQuery = _context.Users
                 .Where(u => u.IsActive &&
-                    (u.FullName.ToLower().Contains(q) || u.Username.ToLower().Contains(q)))
+                    (u.FullName.ToLower().Contains(q) || u.Username.ToLower().Contains(q)));
+
+            if (!string.IsNullOrWhiteSpace(interest))
+            {
+                var interestLower = interest.Trim().ToLower();
+                usersQuery = usersQuery.Where(u => u.Interests != null && u.Interests.ToLower().Contains(interestLower));
+            }
+
+            var users = await usersQuery
                 .OrderBy(u => u.FullName)
                 .Take(20)
                 .Select(u => new UserSummaryDto
