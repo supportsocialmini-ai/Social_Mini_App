@@ -35,15 +35,26 @@ namespace Social_Mini_App.Middleware
                         path.Contains("/api/auth/login") || 
                         path.Contains("/api/auth/register") || 
                         path.Contains("/api/admin/maintenance-status") ||
+                        path.Contains("/api/admin/maintenance-info") ||
                         path.Contains("/api/system/ping") ||
                         path.StartsWith("/chathub")
                     );
 
                     if (!isAdmin && !isAllowedPath)
                     {
+                        var reasonSetting = await dbContext.SystemSettings.FirstOrDefaultAsync(s => s.Key == "MaintenanceReason");
+                        var versionSetting = await dbContext.SystemSettings.FirstOrDefaultAsync(s => s.Key == "MaintenanceVersion");
+                        var endTimeSetting = await dbContext.SystemSettings.FirstOrDefaultAsync(s => s.Key == "MaintenanceEndTime");
+
+                        var reason = reasonSetting?.Value ?? "";
+                        var version = versionSetting?.Value ?? "";
+                        var endTime = endTimeSetting?.Value ?? "";
+
                         context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
                         context.Response.ContentType = "application/json";
-                        await context.Response.WriteAsync("{\"message\": \"Hệ thống đang bảo trì. Vui lòng quay lại sau!\", \"isMaintenance\": true}");
+                        await context.Response.WriteAsync(
+                            $"{{\"message\": \"H\u1ec7 th\u1ed1ng \u0111ang b\u1ea3o tr\u00ec. Vui l\u00f2ng quay l\u1ea1i sau!\", \"isMaintenance\": true, \"reason\": \"{reason}\", \"version\": \"{version}\", \"endTime\": \"{endTime}\"}}"
+                        );
                         return;
                     }
                 }

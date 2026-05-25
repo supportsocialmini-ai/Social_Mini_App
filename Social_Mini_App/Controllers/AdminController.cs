@@ -6,6 +6,7 @@ using MiniSocialNetwork.Models;
 using MiniSocialNetwork.Wrappers;
 using Social_Mini_App.Interfaces;
 using Social_Mini_App.Models;
+using Social_Mini_App.Dtos;
 
 namespace Social_Mini_App.Controllers
 {
@@ -60,6 +61,52 @@ namespace Social_Mini_App.Controllers
 
             await _context.SaveChangesAsync();
             return Ok(new { isMaintenance = setting.Value == "true" });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("maintenance-info")]
+        public async Task<ActionResult<object>> GetMaintenanceInfo()
+        {
+            var settings = await _context.SystemSettings
+                .Where(s => s.Key == "MaintenanceMode" || s.Key == "MaintenanceReason" || s.Key == "MaintenanceVersion" || s.Key == "MaintenanceEndTime")
+                .ToListAsync();
+
+            bool isMaintenance = settings.FirstOrDefault(s => s.Key == "MaintenanceMode")?.Value?.ToLower() == "true";
+            string reason = settings.FirstOrDefault(s => s.Key == "MaintenanceReason")?.Value ?? "";
+            string version = settings.FirstOrDefault(s => s.Key == "MaintenanceVersion")?.Value ?? "";
+            string endTime = settings.FirstOrDefault(s => s.Key == "MaintenanceEndTime")?.Value ?? "";
+
+            return Ok(new { isMaintenance, reason, version, endTime });
+        }
+
+        [HttpPost("maintenance-info")]
+        public async Task<ActionResult<object>> SaveMaintenanceInfo([FromBody] MaintenanceInfoDto dto)
+        {
+            var keys = new[] { "MaintenanceReason", "MaintenanceVersion", "MaintenanceEndTime" };
+            var values = new[] { dto.Reason ?? "", dto.Version ?? "", dto.EndTime ?? "" };
+
+            for (int i = 0; i < keys.Length; i++)
+            {
+                var setting = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == keys[i]);
+                if (setting == null)
+                {
+                    _context.SystemSettings.Add(new Social_Mini_App.Models.SystemSetting
+                    {
+                        Key = keys[i],
+                        Value = values[i],
+                        Description = $"Maintenance {keys[i]}",
+                        LastModified = DateTime.Now
+                    });
+                }
+                else
+                {
+                    setting.Value = values[i];
+                    setting.LastModified = DateTime.Now;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, reason = dto.Reason, version = dto.Version, endTime = dto.EndTime });
         }
 
         [HttpPost("packages")]
