@@ -55,15 +55,27 @@ namespace Social_Mini_App.Controllers
                 return BadRequest(new { message = "Gói dịch vụ không khả dụng hoặc đã bị xóa." });
             }
 
+            decimal finalAmount = targetPackage.Price;
+            if (request.CustomDays.HasValue && request.CustomDays.Value > 0)
+            {
+                double pricePerDay = (double)targetPackage.Price / (targetPackage.DurationDays > 0 ? targetPackage.DurationDays : 1);
+                finalAmount = (decimal)Math.Round(pricePerDay * request.CustomDays.Value);
+            }
+
             // 1. Tạo bản ghi giao dịch nháp
             var payment = new Payment
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 PackageId = targetPackage.Id, 
-                Amount = targetPackage.Price, 
+                PostId = request.PostId, // Gán ID bài viết nếu có
+                Amount = finalAmount, 
                 OrderId = DateTime.Now.Ticks.ToString(),
-                OrderInfo = $"Thanh-toan-goi-{targetPackage.Name?.Trim()}-cho-user-{userId}".Replace(" ", "-"),
+                OrderInfo = request.PostId != null 
+                    ? (request.CustomDays.HasValue && request.CustomDays.Value > 0
+                        ? $"Quang-cao-bai-viet-{request.PostId}-goi-{targetPackage.Name?.Trim()}-customdays-{request.CustomDays.Value}".Replace(" ", "-")
+                        : $"Quang-cao-bai-viet-{request.PostId}-goi-{targetPackage.Name?.Trim()}".Replace(" ", "-"))
+                    : $"Thanh-toan-goi-{targetPackage.Name?.Trim()}-cho-user-{userId}".Replace(" ", "-"),
                 Status = "Pending",
                 CreatedAt = DateTime.Now
             };
@@ -107,44 +119,76 @@ namespace Social_Mini_App.Controllers
                 payment.Status = "Success";
                 payment.VnpayTranId = vnp_TransactionNo;
 
-                // Cập nhật Subscription cho User
-                var subscription = await _context.Subscriptions
-                    .Include(s => s.Package)
-                    .FirstOrDefaultAsync(s => s.UserId == payment.UserId);
-
-                // Lấy tên gói để làm Tier (hoặc anh có thể tùy biến logic này)
-                var packageName = payment.Package?.Name ?? "Premium";
-
                 // Lấy thời gian gia hạn từ gói
                 int durationDays = payment.Package?.DurationDays ?? 30;
+                string type = "premium";
+                int days = durationDays;
 
-                if (subscription == null)
+                if (payment.PostId != null)
                 {
-                    subscription = new Subscription
+                    type = "ads";
+                    // Trường hợp mua quảng cáo cho bài viết cụ thể
+                    var post = await _context.Posts.FindAsync(payment.PostId.Value);
+                    if (post != null)
                     {
-                        Id = Guid.NewGuid(),
-                        UserId = payment.UserId,
-                        Tier = packageName,
-                        PackageId = payment.PackageId,
-                        IsActive = true,
-                        StartDate = DateTime.Now,
-                        EndDate = DateTime.Now.AddDays(durationDays),
-                        CreatedAt = DateTime.Now
-                    };
-                    _context.Subscriptions.Add(subscription);
+                        post.IsSponsored = true;
+                        
+                        // Parse custom duration days from OrderInfo if present
+                        int actualDuration = durationDays;
+                        if (payment.OrderInfo != null && payment.OrderInfo.Contains("-customdays-"))
+                        {
+                            var parts = payment.OrderInfo.Split("-customdays-");
+                            if (parts.Length > 1 && int.TryParse(parts[1], out int parsedDays))
+                            {
+                                actualDuration = parsedDays;
+                            }
+                        }
+                        days = actualDuration;
+
+                        post.SponsorEndDate = (post.SponsorEndDate.HasValue && post.SponsorEndDate > DateTime.UtcNow) 
+                            ? post.SponsorEndDate.Value.AddDays(actualDuration) 
+                            : DateTime.UtcNow.AddDays(actualDuration);
+                        post.UpdatedAt = DateTime.Now;
+                        _context.Posts.Update(post);
+                    }
                 }
                 else
                 {
-                    subscription.Tier = packageName;
-                    subscription.PackageId = payment.PackageId;
-                    subscription.IsActive = true;
-                    subscription.StartDate = DateTime.Now;
-                    subscription.EndDate = (subscription.EndDate > DateTime.Now ? subscription.EndDate : DateTime.Now).Value.AddDays(durationDays);
-                    subscription.UpdatedAt = DateTime.Now;
+                    // Trường hợp mua gói nâng cấp tài khoản thông thường (Chat Random...)
+                    var subscription = await _context.Subscriptions
+                        .Include(s => s.Package)
+                        .FirstOrDefaultAsync(s => s.UserId == payment.UserId);
+
+                    var packageName = payment.Package?.Name ?? "Premium";
+
+                    if (subscription == null)
+                    {
+                        subscription = new Subscription
+                        {
+                            Id = Guid.NewGuid(),
+                            UserId = payment.UserId,
+                            Tier = packageName,
+                            PackageId = payment.PackageId,
+                            IsActive = true,
+                            StartDate = DateTime.Now,
+                            EndDate = DateTime.Now.AddDays(durationDays),
+                            CreatedAt = DateTime.Now
+                        };
+                        _context.Subscriptions.Add(subscription);
+                    }
+                    else
+                    {
+                        subscription.Tier = packageName;
+                        subscription.PackageId = payment.PackageId;
+                        subscription.IsActive = true;
+                        subscription.StartDate = DateTime.Now;
+                        subscription.EndDate = (subscription.EndDate > DateTime.Now ? subscription.EndDate : DateTime.Now).Value.AddDays(durationDays);
+                        subscription.UpdatedAt = DateTime.Now;
+                    }
                 }
 
                 await _context.SaveChangesAsync();
-                return Redirect($"{GetFrontendUrl()}/payment-result?status=success");
+                return Redirect($"{GetFrontendUrl()}/payment-result?status=success&type={type}&days={days}");
             }
             else
             {
@@ -164,5 +208,7 @@ namespace Social_Mini_App.Controllers
     public class CreatePaymentRequest
     {
         public Guid PackageId { get; set; } // Nhận ID gói từ Frontend
+        public Guid? PostId { get; set; } // Nhận ID bài viết từ Frontend nếu mua gói Ads
+        public int? CustomDays { get; set; } // Số ngày tự chọn nếu mua gói Ads custom
     }
 }

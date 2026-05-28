@@ -16,6 +16,7 @@ namespace Social_Mini_App.Models
         public decimal Amount { get; set; }
 
         public Guid? PackageId { get; set; } // Liên kết tới gói dịch vụ
+        public Guid? PostId { get; set; } // Liên kết tới bài viết quảng cáo
 
         [MaxLength(100)]
         public string? OrderId { get; set; } // Mã đơn hàng của hệ thống mình

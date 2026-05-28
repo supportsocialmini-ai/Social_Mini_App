@@ -25,17 +25,28 @@ namespace Social_Mini_App.Services
                          (p.UserId == currentUserId 
                            || p.Privacy == "Public" 
                            || (p.Privacy == "Friends" && friendsIds.Contains(p.UserId))))
-                .Select(p => new { Id = p.PostId, CreatedAt = p.CreatedAt, IsShare = false });
+                .Select(p => new { 
+                    Id = p.PostId, 
+                    CreatedAt = p.CreatedAt, 
+                    IsShare = false,
+                    IsSponsored = p.IsSponsored && (p.SponsorEndDate == null || p.SponsorEndDate > DateTime.UtcNow)
+                });
 
             var sharesQuery = _context.Shares
                 .Where(s => (s.GroupId == null || joinedGroupIds.Contains(s.GroupId.Value)) &&
                          (s.UserId == currentUserId 
                           || s.OriginalPost!.Privacy == "Public" 
                           || (s.OriginalPost.Privacy == "Friends" && friendsIds.Contains(s.UserId))))
-                .Select(s => new { Id = s.ShareId, CreatedAt = s.CreatedAt, IsShare = true });
+                .Select(s => new { 
+                    Id = s.ShareId, 
+                    CreatedAt = s.CreatedAt, 
+                    IsShare = true,
+                    IsSponsored = false
+                });
 
             var paginatedItems = await postsQuery.Union(sharesQuery)
-                .OrderByDescending(x => x.CreatedAt)
+                .OrderByDescending(x => x.IsSponsored)
+                .ThenByDescending(x => x.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -69,7 +80,9 @@ namespace Social_Mini_App.Services
                         CommentCount = p.Comments.Count(),
                         GroupId = p.GroupId,
                         GroupName = p.Group != null ? p.Group.Name : null,
-                        IsShare = false
+                        IsShare = false,
+                        IsSponsored = p.IsSponsored,
+                        SponsorEndDate = p.SponsorEndDate
                     })
                     .ToListAsync();
             }
@@ -107,15 +120,18 @@ namespace Social_Mini_App.Services
                             FullName = s.OriginalPost.User!.FullName ?? s.OriginalPost.User.Username,
                             AvatarUrl = s.OriginalPost.User.AvatarUrl,
                             ImageUrl = s.OriginalPost.ImageUrl,
-                            Privacy = s.OriginalPost.Privacy
+                            Privacy = s.OriginalPost.Privacy,
+                            IsSponsored = s.OriginalPost.IsSponsored,
+                            SponsorEndDate = s.OriginalPost.SponsorEndDate
                         }
                     })
                     .ToListAsync();
             }
 
-            // 3. Kết hợp và sắp xếp lại đúng thứ tự CreatedAt
+            // 3. Kết hợp và sắp xếp: Ưu tiên bài viết được quảng cáo (IsSponsored = true và chưa hết hạn) lên trên, sau đó xếp theo thời gian CreatedAt giảm dần
             var combined = posts.Concat(shares)
-                .OrderByDescending(p => p.CreatedAt)
+                .OrderByDescending(p => p.IsSponsored && (p.SponsorEndDate == null || p.SponsorEndDate > DateTime.UtcNow))
+                .ThenByDescending(p => p.CreatedAt)
                 .ToList();
 
             return combined;
@@ -141,7 +157,9 @@ namespace Social_Mini_App.Services
                     CommentCount = p.Comments.Count(),
                     GroupId = p.GroupId,
                     GroupName = p.Group != null ? p.Group.Name : null,
-                    IsShare = false
+                    IsShare = false,
+                    IsSponsored = p.IsSponsored,
+                    SponsorEndDate = p.SponsorEndDate
                 })
                 .ToListAsync();
 
@@ -175,7 +193,9 @@ namespace Social_Mini_App.Services
                         FullName = s.OriginalPost.User!.FullName ?? s.OriginalPost.User.Username,
                         AvatarUrl = s.OriginalPost.User.AvatarUrl,
                         ImageUrl = s.OriginalPost.ImageUrl,
-                        Privacy = s.OriginalPost.Privacy
+                        Privacy = s.OriginalPost.Privacy,
+                        IsSponsored = s.OriginalPost.IsSponsored,
+                        SponsorEndDate = s.OriginalPost.SponsorEndDate
                     }
                 })
                 .ToListAsync();
@@ -216,7 +236,9 @@ namespace Social_Mini_App.Services
                     CommentCount = p.Comments.Count(),
                     GroupId = p.GroupId,
                     GroupName = p.Group != null ? p.Group.Name : null,
-                    IsShare = false
+                    IsShare = false,
+                    IsSponsored = p.IsSponsored,
+                    SponsorEndDate = p.SponsorEndDate
                 })
                 .ToListAsync();
 
@@ -253,7 +275,9 @@ namespace Social_Mini_App.Services
                         FullName = s.OriginalPost.User!.FullName ?? s.OriginalPost.User.Username,
                         AvatarUrl = s.OriginalPost.User.AvatarUrl,
                         ImageUrl = s.OriginalPost.ImageUrl,
-                        Privacy = s.OriginalPost.Privacy
+                        Privacy = s.OriginalPost.Privacy,
+                        IsSponsored = s.OriginalPost.IsSponsored,
+                        SponsorEndDate = s.OriginalPost.SponsorEndDate
                     }
                 })
                 .ToListAsync();
@@ -282,7 +306,9 @@ namespace Social_Mini_App.Services
                     CommentCount = p.Comments.Count(),
                     GroupId = p.GroupId,
                     GroupName = p.Group != null ? p.Group.Name : null,
-                    IsShare = false
+                    IsShare = false,
+                    IsSponsored = p.IsSponsored,
+                    SponsorEndDate = p.SponsorEndDate
                 })
                 .ToListAsync();
 
@@ -316,7 +342,9 @@ namespace Social_Mini_App.Services
                         FullName = s.OriginalPost.User!.FullName ?? s.OriginalPost.User.Username,
                         AvatarUrl = s.OriginalPost.User.AvatarUrl,
                         ImageUrl = s.OriginalPost.ImageUrl,
-                        Privacy = s.OriginalPost.Privacy
+                        Privacy = s.OriginalPost.Privacy,
+                        IsSponsored = s.OriginalPost.IsSponsored,
+                        SponsorEndDate = s.OriginalPost.SponsorEndDate
                     }
                 })
                 .ToListAsync();

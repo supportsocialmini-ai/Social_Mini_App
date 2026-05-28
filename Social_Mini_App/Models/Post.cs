@@ -23,6 +23,9 @@ namespace Social_Mini_App.Models
 
         public string? ImageUrl { get; set; } // URL ảnh bài viết (null nếu không có ảnh)
 
+        public bool IsSponsored { get; set; } = false; // Bài viết có được quảng cáo hay không (Premium)
+        public DateTime? SponsorEndDate { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 

@@ -203,6 +203,45 @@ namespace Social_Mini_App.Controllers
             return Ok(ApiResponse<List<UserSummaryDto>>.Ok(likes));
         }
 
+        [HttpPut("{id}/toggle-sponsor")]
+        public async Task<IActionResult> ToggleSponsor(Guid id)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == Guid.Empty) return Unauthorized(ApiResponse<string>.Fail("Unauthorized"));
+
+            var post = await _postService.GetPostByIdAsync(id);
+            if (post == null) return NotFound(ApiResponse<string>.Fail("Không tìm thấy bài viết"));
+
+            if (post.UserId != userId) return Forbid();
+
+            // Kiểm tra xem user có gói cước nào sở hữu tính năng quảng cáo bài viết (ví dụ: "Sponsor Post" hoặc "Premium Ads")
+            var userService = HttpContext.RequestServices.GetRequiredService<IUserService>();
+            var user = await userService.GetUserByIdAsync(userId);
+            
+            bool hasSponsorFeature = user != null && (
+                user.ActiveFeatures.Contains("Sponsor Post") || 
+                user.ActiveFeatures.Contains("Premium Ads") || 
+                user.Subscriptions.Any(s => s.IsActive && s.Package != null && 
+                    (s.Package.Features != null && (s.Package.Features.Contains("Sponsor Post") || s.Package.Features.Contains("Premium Ads"))))
+            );
+
+            // Cho phép Admin luôn có quyền quảng cáo
+            bool isAdmin = User.IsInRole("Admin");
+
+            if (!post.IsSponsored && !hasSponsorFeature && !isAdmin)
+            {
+                return BadRequest(ApiResponse<string>.Fail("Bạn cần đăng ký gói dịch vụ hỗ trợ Quảng cáo bài viết để sử dụng tính năng này!"));
+            }
+
+            post.IsSponsored = !post.IsSponsored;
+            if (await _postService.UpdatePostAsync(post))
+            {
+                return Ok(ApiResponse<bool>.Ok(post.IsSponsored));
+            }
+
+            return BadRequest(ApiResponse<string>.Fail("Không thể thực hiện yêu cầu lúc này, vui lòng thử lại sau."));
+        }
+
         private Guid GetCurrentUserId()
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);

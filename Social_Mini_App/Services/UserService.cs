@@ -25,9 +25,9 @@ namespace Social_Mini_App.Services
 
             if (user != null)
             {
-                // Tự động gom tất cả features từ các gói đang active
+                // Tự động gom tất cả features từ các gói đang active và chưa hết hạn
                 user.ActiveFeatures = user.Subscriptions
-                    .Where(s => s.IsActive && s.Package != null && !string.IsNullOrEmpty(s.Package.Features))
+                    .Where(s => s.IsActive && (s.EndDate == null || s.EndDate > DateTime.Now) && s.Package != null && !string.IsNullOrEmpty(s.Package.Features))
                     .SelectMany(s => s.Package.Features.Split(',', StringSplitOptions.RemoveEmptyEntries))
                     .Select(f => f.Trim())
                     .Distinct()

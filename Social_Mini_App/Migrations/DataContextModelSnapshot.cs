@@ -500,6 +500,9 @@ namespace Social_Mini_App.Migrations
                     b.Property<Guid?>("PackageId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -536,6 +539,9 @@ namespace Social_Mini_App.Migrations
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsSponsored")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PostContent")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -545,6 +551,9 @@ namespace Social_Mini_App.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("SponsorEndDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");

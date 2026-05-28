@@ -137,6 +137,7 @@ namespace Social_Mini_App.Controllers
             package.IsActive = request.IsActive;
             package.Description = request.Description;
             package.Features = request.Features;
+            package.DurationDays = request.DurationDays;
             package.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
@@ -478,5 +479,6 @@ namespace Social_Mini_App.Controllers
         public bool IsActive { get; set; }
         public string? Description { get; set; }
         public string? Features { get; set; }
+        public int DurationDays { get; set; }
     }
 }
