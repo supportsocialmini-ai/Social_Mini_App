@@ -72,6 +72,22 @@ namespace Social_Mini_App.Controllers
             return Ok(ApiResponse<List<UserSummaryDto>>.Ok(summaries));
         }
 
+        [HttpGet("interests")]
+        public async Task<IActionResult> GetUniqueInterests()
+        {
+            var users = await _userService.GetAllUsersAsync();
+            var allInterests = users
+                .Select(u => u.Interests)
+                .Where(interests => !string.IsNullOrEmpty(interests))
+                .SelectMany(interests => interests.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                .Select(interest => interest.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(interest => interest)
+                .ToList();
+
+            return Ok(ApiResponse<List<string>>.Ok(allInterests));
+        }
+
         [HttpPut]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
         {
