@@ -6,6 +6,6 @@ namespace Social_Mini_App.Interfaces
 {
     public interface ISearchService
     {
-        Task<SearchResultResponse> SearchAsync(string query, Guid currentUserId, string? interest = null);
+        Task<SearchResultResponse> SearchAsync(string query, Guid currentUserId, string? category = null);
     }
 }

@@ -20,5 +20,6 @@ namespace MiniSocialNetwork.Interfaces
         Task<Guid?> GetConversationIdAsync(Guid groupId);
         Task<IEnumerable<Group>> GetSuggestedGroupsAsync(Guid userId);
         Task<bool> InviteToGroupAsync(Guid inviterId, Guid groupId, Guid friendId);
+        Task<IEnumerable<User>> GetUsersWithSameTopicAsync(Guid groupId);
     }
 }

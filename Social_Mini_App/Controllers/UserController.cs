@@ -65,7 +65,8 @@ namespace Social_Mini_App.Controllers
                 UserId = u.UserId,
                 Username = u.Username,
                 FullName = u.FullName,
-                AvatarUrl = u.AvatarUrl
+                AvatarUrl = u.AvatarUrl,
+                Category = u.Category
             }).ToList();
             
             return Ok(ApiResponse<List<UserSummaryDto>>.Ok(summaries));
@@ -89,6 +90,7 @@ namespace Social_Mini_App.Controllers
             userInDb.DateOfBirth = request.DateOfBirth;
             userInDb.PhoneNumber = request.PhoneNumber;
             userInDb.Interests = request.Interests;
+            userInDb.Category = request.Category;
 
             var result = await _userService.UpdateUserAsync(userInDb);
             if (result) 

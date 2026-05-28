@@ -139,5 +139,12 @@ namespace Social_Mini_App.Controllers
 
             return Ok(ApiResponse<string>.Ok(GroupMsg.Member.InviteSuccess));
         }
+
+        [HttpGet("{id}/topic-users")]
+        public async Task<IActionResult> GetUsersWithSameTopic(Guid id)
+        {
+            var users = await _groupService.GetUsersWithSameTopicAsync(id);
+            return Ok(ApiResponse<IEnumerable<User>>.Ok(users));
+        }
     }
 }

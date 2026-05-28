@@ -23,7 +23,7 @@ namespace Social_Mini_App.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Search([FromQuery] string q, [FromQuery] string? interest = null)
+        public async Task<IActionResult> Search([FromQuery] string q, [FromQuery] string? category = null)
         {
             if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
                 return BadRequest(ApiResponse<SearchResultResponse>.Fail(SearchMsg.Query.TooShort));
@@ -32,7 +32,7 @@ namespace Social_Mini_App.Controllers
             Guid currentUserId = Guid.Empty;
             if (userIdStr != null) Guid.TryParse(userIdStr, out currentUserId);
 
-            var result = await _searchService.SearchAsync(q.Trim(), currentUserId, interest);
+            var result = await _searchService.SearchAsync(q.Trim(), currentUserId, category);
             return Ok(ApiResponse<SearchResultResponse>.Ok(result));
         }
     }

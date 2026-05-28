@@ -23,5 +23,6 @@ namespace Social_Mini_App.Dtos.Requests
         public DateTime? DateOfBirth { get; set; }
         public string? PhoneNumber { get; set; }
         public string? Interests { get; set; }
+        public string? Category { get; set; }
     }
 }

@@ -312,24 +312,27 @@ namespace Social_Mini_App.Services
                 .Include(g => g.Members)
                 .ToListAsync();
 
-            if (user == null || string.IsNullOrWhiteSpace(user.Interests))
+            if (user == null)
             {
                 return publicGroups.OrderByDescending(g => g.Members.Count).Take(5).ToList();
             }
 
-            var interests = user.Interests.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            var userCategory = (user.Category ?? string.Empty).Trim().ToLower();
+            var interests = (user.Interests ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(i => i.Trim().ToLower())
                 .ToList();
 
-            // Lọc các group có category khớp sở thích
+            // Lọc các group có category khớp category của user hoặc trùng sở thích
             var matchedGroups = publicGroups
                 .Where(g => !string.IsNullOrEmpty(g.Category) && 
-                           interests.Any(interest => g.Category.ToLower().Contains(interest)))
+                           ((!string.IsNullOrEmpty(userCategory) && g.Category.Trim().ToLower() == userCategory) ||
+                            interests.Any(interest => g.Category.ToLower().Contains(interest))))
                 .OrderByDescending(g => g.Members.Count)
                 .Take(5)
                 .ToList();
 
-            // Fallback: Nếu không có group nào khớp sở thích, lấy các group phổ biến
+            // Fallback: Nếu không có group nào khớp, lấy các group phổ biến
             if (matchedGroups.Count == 0)
             {
                 return publicGroups.OrderByDescending(g => g.Members.Count).Take(5).ToList();
@@ -392,6 +395,37 @@ namespace Social_Mini_App.Services
             }
 
             return saved;
+        }
+
+        public async Task<IEnumerable<User>> GetUsersWithSameTopicAsync(Guid groupId)
+        {
+            var group = await _context.Groups.FindAsync(groupId);
+            if (group == null)
+                return Enumerable.Empty<User>();
+
+            // Lấy tất cả UserId của thành viên đang hoạt động trong nhóm này để loại trừ
+            var currentMemberIds = await _context.GroupMembers
+                .Where(gm => gm.GroupId == groupId && gm.Status == "Active")
+                .Select(gm => gm.UserId)
+                .ToListAsync();
+
+            var groupCategory = (group.Category ?? string.Empty).Trim().ToLower();
+
+            // Nếu nhóm không có chủ đề cụ thể (Category bị null hoặc trống)
+            if (string.IsNullOrEmpty(groupCategory))
+            {
+                return Enumerable.Empty<User>();
+            }
+
+            // Lấy toàn bộ người dùng hoạt động bình thường, chưa tham gia nhóm và có cùng Category với nhóm
+            var matchedUsers = await _context.Users
+                .Where(u => u.IsActive && !u.IsDeleted 
+                           && !currentMemberIds.Contains(u.UserId) 
+                           && u.Category != null 
+                           && u.Category.Trim().ToLower() == groupCategory)
+                .ToListAsync();
+
+            return matchedUsers;
         }
     }
 }

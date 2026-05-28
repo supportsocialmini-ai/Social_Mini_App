@@ -15,19 +15,19 @@ namespace Social_Mini_App.Services
             _context = context;
         }
 
-        public async Task<SearchResultResponse> SearchAsync(string query, Guid currentUserId, string? interest = null)
+        public async Task<SearchResultResponse> SearchAsync(string query, Guid currentUserId, string? category = null)
         {
             var q = query.Trim().ToLower();
 
             // Tìm kiếm người dùng theo FullName hoặc Username
             var usersQuery = _context.Users
-                .Where(u => u.IsActive &&
+                .Where(u => u.IsActive && !u.IsDeleted &&
                     (u.FullName.ToLower().Contains(q) || u.Username.ToLower().Contains(q)));
 
-            if (!string.IsNullOrWhiteSpace(interest))
+            if (!string.IsNullOrWhiteSpace(category))
             {
-                var interestLower = interest.Trim().ToLower();
-                usersQuery = usersQuery.Where(u => u.Interests != null && u.Interests.ToLower().Contains(interestLower));
+                var categoryLower = category.Trim().ToLower();
+                usersQuery = usersQuery.Where(u => u.Category != null && u.Category.Trim().ToLower() == categoryLower);
             }
 
             var users = await usersQuery
@@ -39,6 +39,33 @@ namespace Social_Mini_App.Services
                     Username = u.Username,
                     FullName = u.FullName,
                     AvatarUrl = u.AvatarUrl
+                })
+                .ToListAsync();
+
+            // Tìm kiếm nhóm Public theo tên, mô tả hoặc category
+            var groupsQuery = _context.Groups
+                .Include(g => g.Members)
+                .Where(g => g.Privacy == "Public" &&
+                    (g.Name.ToLower().Contains(q) || (g.Description != null && g.Description.ToLower().Contains(q))));
+
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                var categoryLower = category.Trim().ToLower();
+                groupsQuery = groupsQuery.Where(g => g.Category != null && g.Category.Trim().ToLower() == categoryLower);
+            }
+
+            var groups = await groupsQuery
+                .OrderByDescending(g => g.Members.Count)
+                .Take(20)
+                .Select(g => new GroupSearchDto
+                {
+                    GroupId = g.GroupId,
+                    Name = g.Name,
+                    Description = g.Description,
+                    AvatarUrl = g.AvatarUrl,
+                    Privacy = g.Privacy,
+                    Category = g.Category,
+                    MemberCount = g.Members.Count(m => m.Status == "Active")
                 })
                 .ToListAsync();
 
@@ -67,7 +94,8 @@ namespace Social_Mini_App.Services
             return new SearchResultResponse
             {
                 Users = users,
-                Posts = posts
+                Posts = posts,
+                Groups = groups
             };
         }
     }

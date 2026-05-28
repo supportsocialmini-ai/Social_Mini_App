@@ -7,6 +7,7 @@ namespace Social_Mini_App.Dtos.Responses
         public string? FullName { get; set; }
         public string? AvatarUrl { get; set; }
         public string? Bio { get; set; }
+        public string? Category { get; set; }
     }
 
     public class FriendRequestDto
