@@ -146,5 +146,44 @@ namespace Social_Mini_App.Controllers
             var users = await _groupService.GetUsersWithSameTopicAsync(id);
             return Ok(ApiResponse<IEnumerable<User>>.Ok(users));
         }
+
+        [HttpPost("{id}/avatar")]
+        public async Task<IActionResult> UploadGroupAvatar(Guid id, IFormFile file)
+        {
+            var userId = GetCurrentUserId();
+            var isGroupAdmin = await _groupService.IsAdminAsync(userId, id);
+            var isSystemAdmin = User.IsInRole("Admin");
+            if (!isGroupAdmin && !isSystemAdmin)
+            {
+                return Unauthorized(ApiResponse<object>.Fail("Bạn không có quyền quản trị nhóm này"));
+            }
+
+            if (file == null || file.Length == 0)
+                return BadRequest(ApiResponse<object>.Fail("Vui lòng chọn file ảnh"));
+
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+            if (!allowedTypes.Contains(file.ContentType.ToLower()))
+                return BadRequest(ApiResponse<object>.Fail("Định dạng file không hợp lệ"));
+
+            var avatarDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
+            Directory.CreateDirectory(avatarDir);
+
+            var ext = Path.GetExtension(file.FileName);
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var filePath = Path.Combine(avatarDir, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var avatarUrl = $"avatars/{fileName}";
+            var success = await _groupService.UpdateGroupAvatarAsync(id, avatarUrl);
+
+            if (success)
+                return Ok(ApiResponse<object>.Ok(new { avatarUrl }));
+
+            return BadRequest(ApiResponse<object>.Fail("Cập nhật ảnh đại diện nhóm thất bại"));
+        }
     }
 }

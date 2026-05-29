@@ -427,5 +427,22 @@ namespace Social_Mini_App.Services
 
             return matchedUsers;
         }
+
+        public async Task<bool> UpdateGroupAvatarAsync(Guid groupId, string avatarUrl)
+        {
+            var group = await _context.Groups.FindAsync(groupId);
+            if (group == null) return false;
+
+            group.AvatarUrl = avatarUrl;
+
+            // Đồng bộ ảnh đại diện của cuộc hội thoại chat nhóm tương ứng
+            var conversation = await _context.Conversations.FirstOrDefaultAsync(c => c.GroupId == groupId);
+            if (conversation != null)
+            {
+                conversation.AvatarUrl = avatarUrl;
+            }
+
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
 }

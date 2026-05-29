@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MiniSocialNetwork.Models;
 using MiniSocialNetwork.Wrappers;
 using Social_Mini_App.Dtos.Responses;
@@ -9,6 +10,8 @@ using Social_Mini_App.Models;
 using System.Security.Claims;
 using Social_Mini_App.Messages;
 
+using MiniSocialNetwork.Data;
+
 namespace Social_Mini_App.Controllers
 {
     [Authorize]
@@ -17,10 +20,12 @@ namespace Social_Mini_App.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly DataContext _context;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, DataContext context)
         {
             _userService = userService;
+            _context = context;
         }
 
         private Guid GetCurrentUserId()
@@ -59,17 +64,27 @@ namespace Social_Mini_App.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetUsers()
         {
-            var users = await _userService.GetAllUsersAsync();
-            var summaries = users.Select(u => new UserSummaryDto
-            {
-                UserId = u.UserId,
-                Username = u.Username,
-                FullName = u.FullName,
-                AvatarUrl = u.AvatarUrl,
-                Category = u.Category
-            }).ToList();
-            
-            return Ok(ApiResponse<List<UserSummaryDto>>.Ok(summaries));
+            var currentUserId = GetCurrentUserId();
+
+            // Lấy tất cả user (trừ user hiện tại nếu muốn, hoặc trả về hết để FE tự lọc)
+            // Đồng thời JOIN với bảng Friendship/FriendshipMembers để xác định trạng thái quan hệ
+            var userFriendships = await (
+                from u in _context.Users
+                where !u.IsDeleted
+                let fmSelf = _context.FriendshipMembers.FirstOrDefault(fm => fm.UserId == currentUserId && _context.FriendshipMembers.Any(fm2 => fm2.UserId == u.UserId && fm2.FriendshipId == fm.FriendshipId))
+                let f = fmSelf != null ? _context.Friendships.FirstOrDefault(fr => fr.FriendshipId == fmSelf.FriendshipId) : null
+                select new
+                {
+                    u.UserId,
+                    u.Username,
+                    u.FullName,
+                    u.AvatarUrl,
+                    u.Category,
+                    FriendshipStatus = f == null ? "None" : (f.Status == "Accepted" ? "Accepted" : (fmSelf.IsRequestSender ? "Sent" : "Received"))
+                }
+            ).ToListAsync();
+
+            return Ok(ApiResponse<object>.Ok(userFriendships));
         }
 
         [HttpGet("interests")]

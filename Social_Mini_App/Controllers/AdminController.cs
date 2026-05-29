@@ -306,8 +306,26 @@ namespace Social_Mini_App.Controllers
 
             var premiumSubsList = await _context.Subscriptions
                 .Include(s => s.Package)
-                .Where(s => s.Tier == "Premium" && s.CreatedAt >= start && s.CreatedAt <= end)
-                .Select(s => new { s.Id, s.UserId, s.Tier, PackageName = s.Package != null ? s.Package.Name : "Premium", s.CreatedAt })
+                .Where(s => s.CreatedAt >= start && s.CreatedAt <= end)
+                .Select(s => new { s.Id, s.UserId, s.Tier, PackageName = s.Package != null ? s.Package.Name : s.Tier, s.CreatedAt })
+                .ToListAsync();
+
+            var adsList = await _context.Payments
+                .Include(p => p.Package)
+                .Include(p => p.User)
+                .Where(p => p.PostId != null && p.Status == "Success" && p.CreatedAt >= start && p.CreatedAt <= end)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.UserId,
+                    UserFullName = p.User != null ? p.User.FullName : "Không xác định",
+                    UserUsername = p.User != null ? p.User.Username : "unknown",
+                    UserEmail = p.User != null ? p.User.Email : "",
+                    p.PostId,
+                    PackageName = p.Package != null ? p.Package.Name : "Quảng cáo",
+                    p.Amount,
+                    p.CreatedAt
+                })
                 .ToListAsync();
 
             var reportsList = await (
@@ -341,6 +359,7 @@ namespace Social_Mini_App.Controllers
                 var posts = postsList.Count(p => p.CreatedAt >= dayStart && p.CreatedAt <= dayEnd);
                 var premiums = premiumSubsList.Count(s => s.CreatedAt >= dayStart && s.CreatedAt <= dayEnd);
                 var reported = reportsList.Count(r => r.CreatedAt >= dayStart && r.CreatedAt <= dayEnd);
+                var ads = adsList.Count(a => a.CreatedAt >= dayStart && a.CreatedAt <= dayEnd);
 
                 dailyData.Add(new
                 {
@@ -348,6 +367,7 @@ namespace Social_Mini_App.Controllers
                     JoinedUsers = joined,
                     CreatedPosts = posts,
                     PremiumRegistrations = premiums,
+                    AdsRegistrations = ads,
                     ReportedPosts = reported
                 });
             }
@@ -361,6 +381,22 @@ namespace Social_Mini_App.Controllers
                 .Concat(reportsList.Select(r => r.ReporterId))
                 .Distinct()
                 .ToList();
+
+            // Add ads events
+            foreach (var a in adsList)
+            {
+                events.Add(new DetailedEventDto
+                {
+                    Type = "Ads",
+                    TypeName = "Đăng ký quảng cáo",
+                    UserId = a.UserId,
+                    FullName = a.UserFullName,
+                    Username = a.UserUsername,
+                    Email = a.UserEmail,
+                    Time = a.CreatedAt,
+                    Details = $"Mua quảng cáo cho bài viết (ID: {a.PostId}) - Gói: {a.PackageName} - {a.Amount:N0} VNĐ"
+                });
+            }
 
             var usersMap = await _context.Users
                 .Where(u => userIdsToFetch.Contains(u.UserId))
@@ -455,7 +491,91 @@ namespace Social_Mini_App.Controllers
                 TotalJoined = usersList.Count,
                 TotalPosts = postsList.Count,
                 TotalPremiums = premiumSubsList.Count,
+                TotalAds = adsList.Count,
                 TotalReports = reportsList.Count
+            }));
+        }
+
+        [HttpGet("revenue")]
+        public async Task<IActionResult> GetRevenue([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            var start = (startDate ?? DateTime.Now.AddDays(-30)).Date;
+            var end = (endDate ?? DateTime.Now).Date.AddDays(1).AddTicks(-1);
+
+            // 1. Lấy tất cả payments thành công
+            var successPayments = await _context.Payments
+                .Include(p => p.Package)
+                .Include(p => p.User)
+                .Where(p => p.Status == "Success" && p.CreatedAt >= start && p.CreatedAt <= end)
+                .ToListAsync();
+
+            var premiumPayments = successPayments.Where(p => p.PostId == null).ToList();
+            var adsPayments = successPayments.Where(p => p.PostId != null).ToList();
+
+            // 2. Tổng doanh thu
+            decimal totalRevenue = successPayments.Sum(p => p.Amount);
+            decimal premiumRevenue = premiumPayments.Sum(p => p.Amount);
+            decimal adsRevenue = adsPayments.Sum(p => p.Amount);
+
+            // 3. Doanh thu theo ngày
+            var dailyRevenue = new List<object>();
+            for (var date = start.Date; date <= end.Date; date = date.AddDays(1))
+            {
+                var dayStart = date;
+                var dayEnd = date.AddDays(1).AddTicks(-1);
+                var dayPremium = premiumPayments.Where(p => p.CreatedAt >= dayStart && p.CreatedAt <= dayEnd).Sum(p => p.Amount);
+                var dayAds = adsPayments.Where(p => p.CreatedAt >= dayStart && p.CreatedAt <= dayEnd).Sum(p => p.Amount);
+                dailyRevenue.Add(new
+                {
+                    Date = date.ToString("yyyy-MM-dd"),
+                    PremiumRevenue = dayPremium,
+                    AdsRevenue = dayAds,
+                    TotalRevenue = dayPremium + dayAds
+                });
+            }
+
+            // 4. Top gói bán chạy
+            var packageSales = successPayments
+                .GroupBy(p => new { Name = p.Package != null ? p.Package.Name : (p.PostId != null ? "Quảng cáo" : "Không xác định"), IsAds = p.PostId != null })
+                .Select(g => new
+                {
+                    PackageName = g.Key.Name,
+                    IsAds = g.Key.IsAds,
+                    Count = g.Count(),
+                    TotalAmount = g.Sum(p => p.Amount)
+                })
+                .OrderByDescending(x => x.TotalAmount)
+                .ToList();
+
+            // 5. Danh sách giao dịch chi tiết (50 giao dịch mới nhất)
+            var transactions = successPayments
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(100)
+                .Select(p => new
+                {
+                    Id = p.Id,
+                    UserFullName = p.User != null ? p.User.FullName : "Không xác định",
+                    UserUsername = p.User != null ? p.User.Username : "unknown",
+                    UserEmail = p.User != null ? p.User.Email : "",
+                    PackageName = p.Package != null ? p.Package.Name : (p.PostId != null ? "Quảng cáo bài viết" : "Không xác định"),
+                    Type = p.PostId != null ? "Ads" : "Premium",
+                    Amount = p.Amount,
+                    PostId = p.PostId,
+                    CreatedAt = p.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")
+                })
+                .ToList();
+
+            return Ok(ApiResponse<object>.Ok(new
+            {
+                TotalRevenue = totalRevenue,
+                PremiumRevenue = premiumRevenue,
+                AdsRevenue = adsRevenue,
+                TotalTransactions = successPayments.Count,
+                PremiumCount = premiumPayments.Count,
+                AdsCount = adsPayments.Count,
+                DailyRevenue = dailyRevenue,
+                PackageSales = packageSales,
+                Transactions = transactions
             }));
         }
     }

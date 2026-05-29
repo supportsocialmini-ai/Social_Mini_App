@@ -70,6 +70,11 @@ public class ChatController : ControllerBase
 
         var users = await _context.ConversationParticipants
             .Where(cp => cp.UserId == currentUserId)
+            // Filter only 1-1 chats (not group chats)
+            .Join(_context.Conversations.Where(c => !c.IsGroupChat),
+                  cp => cp.ConversationId,
+                  c => c.ConversationId,
+                  (cp, c) => cp)
             // Join to find the *other* participants in the same conversation
             .SelectMany(cp => _context.ConversationParticipants
                 .Where(cp2 => cp2.ConversationId == cp.ConversationId && cp2.UserId != currentUserId))
