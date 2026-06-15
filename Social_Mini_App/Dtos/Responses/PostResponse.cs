@@ -26,5 +26,10 @@ namespace Social_Mini_App.Dtos.Responses
 
         public Guid? GroupId { get; set; }
         public string? GroupName { get; set; }
+
+        public bool IsViolated { get; set; }
+        public string? ViolationReason { get; set; }
+        public bool IsAppealed { get; set; }
+        public string? AppealReason { get; set; }
     }
 }

@@ -140,6 +140,36 @@ namespace Social_Mini_App.Controllers
             return Ok(ApiResponse<string>.Ok(GroupMsg.Member.InviteSuccess));
         }
 
+        [HttpGet("my-invites")]
+        public async Task<IActionResult> GetMyPendingInvites()
+        {
+            var userId = GetCurrentUserId();
+            var invites = await _groupService.GetPendingInvitesAsync(userId);
+            return Ok(ApiResponse<IEnumerable<object>>.Ok(invites));
+        }
+
+        [HttpPost("{id}/invite/accept")]
+        public async Task<IActionResult> AcceptInvite(Guid id)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _groupService.AcceptGroupInviteAsync(userId, id);
+            if (!result)
+                return BadRequest(ApiResponse<string>.Fail("Không tìm thấy lời mời hoặc đã xử lý"));
+
+            return Ok(ApiResponse<string>.Ok("Đã chấp nhận lời mời vào nhóm"));
+        }
+
+        [HttpPost("{id}/invite/decline")]
+        public async Task<IActionResult> DeclineInvite(Guid id)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _groupService.DeclineGroupInviteAsync(userId, id);
+            if (!result)
+                return BadRequest(ApiResponse<string>.Fail("Không tìm thấy lời mời hoặc đã xử lý"));
+
+            return Ok(ApiResponse<string>.Ok("Đã từ chối lời mời"));
+        }
+
         [HttpGet("{id}/topic-users")]
         public async Task<IActionResult> GetUsersWithSameTopic(Guid id)
         {

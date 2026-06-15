@@ -530,6 +530,9 @@ namespace Social_Mini_App.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AppealReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -539,7 +542,13 @@ namespace Social_Mini_App.Migrations
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsAppealed")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsSponsored")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsViolated")
                         .HasColumnType("bit");
 
                     b.Property<string>("PostContent")
@@ -560,6 +569,9 @@ namespace Social_Mini_App.Migrations
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ViolationReason")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PostId");
 

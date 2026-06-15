@@ -9,6 +9,9 @@ using Social_Mini_App.Models;
 using System.Security.Claims;
 using Social_Mini_App.Messages;
 
+using MiniSocialNetwork.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace Social_Mini_App.Controllers
 {
     [Authorize]
@@ -17,7 +20,15 @@ namespace Social_Mini_App.Controllers
     public class PostController : ControllerBase
     {
         private readonly IPostService _postService;
-        public PostController(IPostService postService) => _postService = postService;
+        private readonly DataContext _context;
+        private readonly INotificationService _notifService;
+
+        public PostController(IPostService postService, DataContext context, INotificationService notifService)
+        {
+            _postService = postService;
+            _context = context;
+            _notifService = notifService;
+        }
 
         // 1. LẤY NEWSFEED
         [HttpGet]
@@ -178,6 +189,25 @@ namespace Social_Mini_App.Controllers
             return Ok(ApiResponse<List<PostResponse>>.Ok(posts));
         }
 
+        // 3. LẤY CHI TIẾT BÀI VIẾT THEO ID (hỗ trợ trang kháng nghị)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetPostById(Guid id)
+        {
+            var currentUserId = GetCurrentUserId();
+            var post = await _postService.GetPostResponseByIdAsync(id, currentUserId);
+            if (post == null)
+                return NotFound(ApiResponse<PostResponse>.Fail("Không tìm thấy bài viết"));
+
+            // Nếu bài viết bị đánh dấu vi phạm, chỉ cho phép tác giả bài viết hoặc Admin xem
+            var isAdmin = User.IsInRole("Admin");
+            if (post.IsViolated && post.UserId != currentUserId && !isAdmin)
+            {
+                return Forbid();
+            }
+
+            return Ok(ApiResponse<PostResponse>.Ok(post));
+        }
+
         // 6. LẤY BÀI VIẾT CỦA NGƯỜI KHÁC
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetUserPosts(Guid userId)
@@ -203,7 +233,61 @@ namespace Social_Mini_App.Controllers
             return Ok(ApiResponse<List<UserSummaryDto>>.Ok(likes));
         }
 
-        [HttpPut("{id}/toggle-sponsor")]
+        [HttpPost("{id}/appeal")]
+        public async Task<IActionResult> AppealPost(Guid id, [FromBody] AppealRequestDto dto)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == Guid.Empty) return Unauthorized(ApiResponse<string>.Fail("Unauthorized"));
+
+            var post = await _postService.GetPostByIdAsync(id);
+            if (post == null) return NotFound(ApiResponse<string>.Fail("Không tìm thấy bài viết"));
+
+            if (post.UserId != userId) return Forbid();
+            if (!post.IsViolated) return BadRequest(ApiResponse<string>.Fail("Bài viết không ở trạng thái vi phạm để kháng nghị."));
+
+            post.IsAppealed = true;
+            post.AppealReason = dto.Reason;
+            post.UpdatedAt = DateTime.UtcNow;
+
+            if (await _postService.UpdatePostAsync(post))
+            {
+                // 1. Chuyển đổi trạng thái của tất cả báo cáo liên quan về lại Pending
+                var reports = await _context.Reports
+                    .Where(r => r.TargetType == "Post" && r.TargetId == id)
+                    .ToListAsync();
+                foreach (var r in reports)
+                {
+                    r.Status = "Pending";
+                    r.ResolvedAt = null;
+                    r.ResolvedById = null;
+                }
+                await _context.SaveChangesAsync();
+
+                // 2. Gửi thông báo cho toàn bộ Admin
+                var userObj = await _context.Users.FindAsync(userId);
+                string displayName = userObj?.FullName ?? userObj?.Username ?? "Thành viên";
+
+                var admins = await _context.Users
+                    .Where(u => u.UserRoles.Any(ur => ur.Role.Name == "Admin"))
+                    .ToListAsync();
+                foreach (var admin in admins)
+                {
+                    await _notifService.CreateNotifAsync(
+                        userId,
+                        admin.UserId,
+                        post.PostId,
+                        "AppealSubmit",
+                        $"{displayName} đã gửi kháng nghị bài viết"
+                    );
+                }
+
+                return Ok(ApiResponse<string>.Ok("Đã gửi kháng nghị của bạn đến ban quản trị thành công. Vui lòng chờ phê duyệt."));
+            }
+
+            return BadRequest(ApiResponse<string>.Fail("Không thể gửi yêu cầu kháng nghị lúc này."));
+        }
+
+        [HttpPost("{id}/toggle-sponsor")]
         public async Task<IActionResult> ToggleSponsor(Guid id)
         {
             var userId = GetCurrentUserId();

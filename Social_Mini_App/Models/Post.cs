@@ -33,6 +33,12 @@ namespace Social_Mini_App.Models
         [ForeignKey("GroupId")]
         public virtual Group? Group { get; set; }
 
+        public bool IsViolated { get; set; } = false; // Đánh dấu bài viết vi phạm chính sách cộng đồng
+        public string? ViolationReason { get; set; } // Lý do bài viết bị ẩn/xóa mềm
+        
+        public bool IsAppealed { get; set; } = false; // Người dùng đã gửi yêu cầu cứu xét gỡ khóa
+        public string? AppealReason { get; set; } // Lý do giải trình kháng nghị
+
         // Quan hệ: Một bài viết thuộc về một User
         // Dùng [JsonIgnore] để khi lấy bài viết nó không lôi cả cục User ra gây vòng lặp vô tận
         [ForeignKey("UserId")]

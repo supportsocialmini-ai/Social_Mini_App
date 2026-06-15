@@ -22,5 +22,8 @@ namespace Social_Mini_App.Dtos
         
         // Thông tin thêm cho Admin dễ xem
         public string? TargetContent { get; set; } // Ví dụ nội dung bài viết bị báo cáo
+        public bool IsPostAppealed { get; set; }
+        public string? PostAppealReason { get; set; }
+        public bool IsPostViolated { get; set; }
     }
 }

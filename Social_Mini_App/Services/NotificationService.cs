@@ -19,7 +19,7 @@ namespace Social_Mini_App.Services
             _hubContext = hubContext;
         }
 
-        public async Task CreateNotifAsync(Guid senderId, Guid receiverId, Guid? postId, string type)
+        public async Task CreateNotifAsync(Guid senderId, Guid receiverId, Guid? postId, string type, string extraData = "")
         {
             if (senderId == receiverId) return;
  
@@ -30,16 +30,22 @@ namespace Social_Mini_App.Services
                 "FriendRequest" => NotificationMsg.Action.FriendRequest,
                 "FriendAccept" => NotificationMsg.Action.FriendAccept,
                 "GroupInvite" => NotificationMsg.Action.GroupInvite,
+                "Violation" => NotificationMsg.Action.Violation,
+                "AppealAccept" => NotificationMsg.Action.AppealAccept,
+                "AppealReject" => NotificationMsg.Action.AppealReject,
+                "AppealSubmit" => NotificationMsg.Action.AppealSubmit,
                 _ => type
             };
  
+            string messageValue = !string.IsNullOrEmpty(extraData) ? $"{actionKey}|{extraData}" : actionKey;
+
             var notif = new Notification
             {
                 SenderId = senderId,
                 ReceiverId = receiverId,
                 PostId = postId,
                 NotificationType = type,
-                Message = actionKey, // Store the KEY instead of the full sentence
+                Message = messageValue, // Store the KEY (or KEY|extraData) instead of the full sentence
                 CreatedAt = DateTime.Now,
                 IsRead = false
             };
@@ -51,7 +57,7 @@ namespace Social_Mini_App.Services
             var sender = await _context.Users.FindAsync(senderId);
 
             // Gửi "Mã thông báo|Tên người gửi" qua SignalR để FE dễ bóc tách
-            string signalRMsg = $"{actionKey}|{sender?.FullName ?? sender?.Username}";
+            string signalRMsg = $"{messageValue}|{sender?.FullName ?? sender?.Username}";
             await _hubContext.Clients.User(receiverId.ToString()).SendAsync("ReceiveNotification", signalRMsg);
         }
  

@@ -9,10 +9,12 @@ namespace Social_Mini_App.Services
     public class ReportService : IReportService
     {
         private readonly DataContext _context;
+        private readonly INotificationService _notifService;
 
-        public ReportService(DataContext context)
+        public ReportService(DataContext context, INotificationService notifService)
         {
             _context = context;
+            _notifService = notifService;
         }
 
         public async Task<bool> CreateReportAsync(Guid reporterId, ReportCreateRequest request)
@@ -61,6 +63,9 @@ namespace Social_Mini_App.Services
                 {
                     var post = await _context.Posts.FindAsync(r.TargetId);
                     response.TargetContent = post?.PostContent ?? "[Nội dung bài viết đã bị xóa]";
+                    response.IsPostAppealed = post?.IsAppealed ?? false;
+                    response.PostAppealReason = post?.AppealReason;
+                    response.IsPostViolated = post?.IsViolated ?? false;
                 }
                 else if (r.TargetType == "User")
                 {
@@ -83,7 +88,30 @@ namespace Social_Mini_App.Services
             report.ResolvedAt = DateTime.Now;
             report.ResolvedById = adminId;
 
-            return await _context.SaveChangesAsync() > 0;
+            // Nếu báo cáo là bài viết (Post) và được chấp nhận là vi phạm (Resolved)
+            if (action == "Resolved" && report.TargetType == "Post")
+            {
+                var post = await _context.Posts.FindAsync(report.TargetId);
+                if (post != null)
+                {
+                    post.IsViolated = true;
+                    post.ViolationReason = !string.IsNullOrEmpty(report.Description)
+                        ? $"{report.Reason} - {report.Description}"
+                        : report.Reason; // Ghi nhận lý do vi phạm chi tiết
+
+                    // Gửi thông báo cho người dùng
+                    await _notifService.CreateNotifAsync(
+                        adminId,
+                        post.UserId,
+                        post.PostId,
+                        "Violation",
+                        post.ViolationReason
+                    );
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

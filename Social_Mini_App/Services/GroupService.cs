@@ -351,7 +351,7 @@ namespace Social_Mini_App.Services
             // Cannot invite yourself
             if (inviterId == friendId) return false;
 
-            // Check if friend is already a member (any status)
+            // Check if friend is already a member or pending (any status)
             var existingMember = await _context.GroupMembers
                 .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == friendId);
             if (existingMember != null) return false;
@@ -359,42 +359,82 @@ namespace Social_Mini_App.Services
             var group = await _context.Groups.FindAsync(groupId);
             if (group == null) return false;
 
-            // Add friend as active member directly
+            // Add friend as PENDING — they must accept before becoming active
             _context.GroupMembers.Add(new GroupMember
             {
                 GroupId = groupId,
                 UserId = friendId,
                 Role = "Member",
                 JoinedAt = DateTime.UtcNow,
-                Status = "Active"
+                Status = "Pending"
             });
-
-            // Also add to group conversation
-            var conversation = await _context.Conversations.FirstOrDefaultAsync(c => c.GroupId == groupId);
-            if (conversation != null)
-            {
-                var alreadyParticipant = await _context.ConversationParticipants
-                    .AnyAsync(cp => cp.ConversationId == conversation.ConversationId && cp.UserId == friendId);
-                if (!alreadyParticipant)
-                {
-                    _context.ConversationParticipants.Add(new ConversationParticipant
-                    {
-                        ConversationId = conversation.ConversationId,
-                        UserId = friendId,
-                        JoinedAt = DateTime.Now
-                    });
-                }
-            }
 
             var saved = await _context.SaveChangesAsync() > 0;
 
             if (saved)
             {
-                // Notify the invited friend
-                await _notifService.CreateNotifAsync(inviterId, friendId, null, "GroupInvite");
+                // Send notification with groupId as extraData so FE can link directly
+                var inviter = await _context.Users.FindAsync(inviterId);
+                await _notifService.CreateNotifAsync(inviterId, friendId, null, "GroupInvite", groupId.ToString());
             }
 
             return saved;
+        }
+
+        public async Task<IEnumerable<object>> GetPendingInvitesAsync(Guid userId)
+        {
+            return await _context.GroupMembers
+                .Where(gm => gm.UserId == userId && gm.Status == "Pending")
+                .Include(gm => gm.Group)
+                .Select(gm => new
+                {
+                    gm.GroupId,
+                    GroupName = gm.Group!.Name,
+                    GroupAvatarUrl = gm.Group.AvatarUrl,
+                    GroupCategory = gm.Group.Category,
+                    GroupPrivacy = gm.Group.Privacy,
+                    gm.JoinedAt
+                })
+                .ToListAsync<object>();
+        }
+
+        public async Task<bool> AcceptGroupInviteAsync(Guid userId, Guid groupId)
+        {
+            var member = await _context.GroupMembers
+                .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == userId && gm.Status == "Pending");
+            if (member == null) return false;
+
+            member.Status = "Active";
+            member.JoinedAt = DateTime.UtcNow;
+
+            // Add to group conversation
+            var conversation = await _context.Conversations.FirstOrDefaultAsync(c => c.GroupId == groupId);
+            if (conversation != null)
+            {
+                var alreadyParticipant = await _context.ConversationParticipants
+                    .AnyAsync(cp => cp.ConversationId == conversation.ConversationId && cp.UserId == userId);
+                if (!alreadyParticipant)
+                {
+                    _context.ConversationParticipants.Add(new ConversationParticipant
+                    {
+                        ConversationId = conversation.ConversationId,
+                        UserId = userId,
+                        JoinedAt = DateTime.Now
+                    });
+                }
+            }
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> DeclineGroupInviteAsync(Guid userId, Guid groupId)
+        {
+            var member = await _context.GroupMembers
+                .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == userId && gm.Status == "Pending");
+            if (member == null) return false;
+
+            _context.GroupMembers.Remove(member);
+            return await _context.SaveChangesAsync() > 0;
         }
 
         public async Task<IEnumerable<User>> GetUsersWithSameTopicAsync(Guid groupId)

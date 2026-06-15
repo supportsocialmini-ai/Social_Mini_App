@@ -8,6 +8,8 @@ using Social_Mini_App.Interfaces;
 using Social_Mini_App.Models;
 using Social_Mini_App.Dtos;
 
+using System.Security.Claims;
+
 namespace Social_Mini_App.Controllers
 {
     [Authorize(Roles = "Admin")]
@@ -17,11 +19,13 @@ namespace Social_Mini_App.Controllers
     {
         private readonly DataContext _context;
         private readonly IUserService _userService;
+        private readonly INotificationService _notifService;
 
-        public AdminController(DataContext context, IUserService _userService)
+        public AdminController(DataContext context, IUserService userService, INotificationService notifService)
         {
             _context = context;
-            this._userService = _userService;
+            _userService = userService;
+            _notifService = notifService;
         }
 
         [HttpGet("stats")]
@@ -210,6 +214,110 @@ namespace Social_Mini_App.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(ApiResponse<string>.Ok("Đã xóa bài viết bởi Admin"));
+        }
+
+        [HttpGet("posts/appeals")]
+        public async Task<IActionResult> GetAppealedPosts()
+        {
+            var appealedPosts = await _context.Posts
+                .Include(p => p.User)
+                .Where(p => p.IsViolated && p.IsAppealed)
+                .OrderByDescending(p => p.UpdatedAt)
+                .Select(p => new
+                {
+                    p.PostId,
+                    p.PostContent,
+                    p.ImageUrl,
+                    p.CreatedAt,
+                    p.UpdatedAt,
+                    p.ViolationReason,
+                    p.AppealReason,
+                    User = new
+                    {
+                        p.User!.UserId,
+                        p.User.FullName,
+                        p.User.Username,
+                        p.User.AvatarUrl
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponse<object>.Ok(appealedPosts));
+        }
+
+        [HttpPost("posts/{postId}/appeal-resolve")]
+        public async Task<IActionResult> ResolveAppeal(Guid postId, [FromQuery] string action)
+        {
+            var post = await _context.Posts.FindAsync(postId);
+            if (post == null) return NotFound(ApiResponse<string>.Fail("Không tìm thấy bài viết"));
+
+            var adminIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(adminIdStr, out var adminId))
+                adminId = Guid.Empty;
+
+            if (action == "Approve")
+            {
+                // Đồng ý phục hồi bài viết
+                post.IsViolated = false;
+                post.IsAppealed = false;
+                post.ViolationReason = null;
+                post.AppealReason = null;
+                
+                // Đồng thời cập nhật trạng thái các báo cáo liên quan thành Dismissed
+                var reports = await _context.Reports
+                    .Where(r => r.TargetType == "Post" && r.TargetId == postId && r.Status == "Pending")
+                    .ToListAsync();
+                foreach (var r in reports)
+                {
+                    r.Status = "Dismissed";
+                    r.ResolvedAt = DateTime.Now;
+                    r.ResolvedById = adminId;
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Gửi thông báo cảm ơn và báo bài viết đã hiển thị lại
+                await _notifService.CreateNotifAsync(
+                    adminId,
+                    post.UserId,
+                    post.PostId,
+                    "AppealAccept",
+                    "Cảm ơn bạn đã gửi thông tin bảo vệ bài viết của họ bài viết đã được hiển thị lại"
+                );
+
+                return Ok(ApiResponse<string>.Ok("Đã duyệt gỡ vi phạm và khôi phục bài viết thành công."));
+            }
+            else if (action == "Reject")
+            {
+                // Từ chối phục hồi bài viết
+                post.IsAppealed = false; // Tắt trạng thái yêu cầu chờ phê duyệt
+                
+                // Cập nhật trạng thái các báo cáo liên quan thành Resolved
+                var reports = await _context.Reports
+                    .Where(r => r.TargetType == "Post" && r.TargetId == postId && r.Status == "Pending")
+                    .ToListAsync();
+                foreach (var r in reports)
+                {
+                    r.Status = "Resolved";
+                    r.ResolvedAt = DateTime.Now;
+                    r.ResolvedById = adminId;
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Gửi thông báo cảm ơn nhưng từ chối
+                await _notifService.CreateNotifAsync(
+                    adminId,
+                    post.UserId,
+                    post.PostId,
+                    "AppealReject",
+                    "cảm ơn nhưng chúng tôi không thể hoàn tác bài viết của bài vì chưa đủ thông tin xác thực bài viết bạn không quy phạm"
+                );
+
+                return Ok(ApiResponse<string>.Ok("Đã từ chối đơn yêu cầu cứu xét phục hồi của bài viết này."));
+            }
+
+            return BadRequest(ApiResponse<string>.Fail("Hành động không hợp lệ (Hỗ trợ: Approve, Reject)."));
         }
 
         [HttpGet("groups")]

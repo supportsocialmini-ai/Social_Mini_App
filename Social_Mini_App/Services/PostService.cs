@@ -19,47 +19,114 @@ namespace Social_Mini_App.Services
                 .Select(gm => gm.GroupId)
                 .ToListAsync();
 
-            // 1. Phân trang hoàn toàn ở cấp Database sử dụng Union các ID và CreatedAt
-            var postsQuery = _context.Posts
+            // Lấy tất cả bài viết hợp lệ
+            var postsQuery = await _context.Posts
+                .Where(p => !p.IsViolated) // Ẩn các bài viết vi phạm chính sách khỏi bảng tin chung
                 .Where(p => (p.GroupId == null || joinedGroupIds.Contains(p.GroupId.Value)) &&
                          (p.UserId == currentUserId 
                            || p.Privacy == "Public" 
                            || (p.Privacy == "Friends" && friendsIds.Contains(p.UserId))))
                 .Select(p => new { 
                     Id = p.PostId, 
-                    CreatedAt = p.CreatedAt, 
                     IsShare = false,
                     IsSponsored = p.IsSponsored && (p.SponsorEndDate == null || p.SponsorEndDate > DateTime.UtcNow)
-                });
+                })
+                .ToListAsync();
 
-            var sharesQuery = _context.Shares
+            // Lấy tất cả bài share hợp lệ
+            var sharesQuery = await _context.Shares
+                .Where(s => !s.OriginalPost!.IsViolated) // Ẩn các bài viết gốc bị vi phạm chính sách
                 .Where(s => (s.GroupId == null || joinedGroupIds.Contains(s.GroupId.Value)) &&
                          (s.UserId == currentUserId 
                           || s.OriginalPost!.Privacy == "Public" 
                           || (s.OriginalPost.Privacy == "Friends" && friendsIds.Contains(s.UserId))))
                 .Select(s => new { 
                     Id = s.ShareId, 
-                    CreatedAt = s.CreatedAt, 
                     IsShare = true,
                     IsSponsored = false
-                });
+                })
+                .ToListAsync();
 
-            var paginatedItems = await postsQuery.Union(sharesQuery)
-                .OrderByDescending(x => x.IsSponsored)
-                .ThenByDescending(x => x.CreatedAt)
+            var allItems = postsQuery.Concat(sharesQuery).ToList();
+
+            if (!allItems.Any())
+            {
+                return new List<PostResponse>();
+            }
+
+            // Chia làm 2 nhóm: Bài quảng cáo và bài viết thường
+            var sponsoredItems = allItems.Where(x => x.IsSponsored).ToList();
+            var regularItems = allItems.Where(x => !x.IsSponsored).ToList();
+
+            // Sáo trộn ngẫu nhiên cả 2 nhóm sử dụng thuật toán Fisher-Yates
+            var rand = new Random();
+            
+            int nSpon = sponsoredItems.Count;
+            while (nSpon > 1) {
+                nSpon--;
+                int k = rand.Next(nSpon + 1);
+                var value = sponsoredItems[k];
+                sponsoredItems[k] = sponsoredItems[nSpon];
+                sponsoredItems[nSpon] = value;
+            }
+
+            int nReg = regularItems.Count;
+            while (nReg > 1) {
+                nReg--;
+                int k = rand.Next(nReg + 1);
+                var value = regularItems[k];
+                regularItems[k] = regularItems[nReg];
+                regularItems[nReg] = value;
+            }
+
+            // Trộn xen kẽ: 
+            var blendedItems = new List<dynamic>();
+            int sponsoredIndex = 0;
+            int regularIndex = 0;
+
+            // Quyết định ngẫu nhiên xem bài viết đầu tiên trên bảng tin là bài thường hay bài quảng cáo
+            bool startWithRegular = rand.Next(0, 2) == 0; // 50% cơ hội bắt đầu bằng bài thường
+
+            if (startWithRegular && regularIndex < regularItems.Count)
+            {
+                int firstBatch = rand.Next(3, 6); // Lấy trước 3 đến 5 bài thường lên đầu feed
+                for (int i = 0; i < firstBatch && regularIndex < regularItems.Count; i++)
+                {
+                    blendedItems.Add(regularItems[regularIndex++]);
+                }
+            }
+
+            while (sponsoredIndex < sponsoredItems.Count || regularIndex < regularItems.Count)
+            {
+                // Thêm 1 bài quảng cáo ngẫu nhiên nếu còn
+                if (sponsoredIndex < sponsoredItems.Count)
+                {
+                    blendedItems.Add(sponsoredItems[sponsoredIndex++]);
+                }
+
+                // Thêm ngẫu nhiên khoảng 6-7 bài thường
+                int regularCountToInsert = rand.Next(6, 8); // sinh ngẫu nhiên 6 hoặc 7
+                for (int i = 0; i < regularCountToInsert && regularIndex < regularItems.Count; i++)
+                {
+                    blendedItems.Add(regularItems[regularIndex++]);
+                }
+            }
+
+            // Áp dụng phân trang ở bộ nhớ (in-memory paging) sau khi đã sáo trộn và trộn tỷ lệ
+            var paginatedItems = blendedItems
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
+                .ToList();
 
             if (!paginatedItems.Any())
             {
                 return new List<PostResponse>();
             }
 
-            var postIds = paginatedItems.Where(x => !x.IsShare).Select(x => x.Id).ToList();
-            var shareIds = paginatedItems.Where(x => x.IsShare).Select(x => x.Id).ToList();
+            var postIds = paginatedItems.Where(x => !x.IsShare).Select(x => (Guid)x.Id).ToList();
+            var shareIds = paginatedItems.Where(x => x.IsShare).Select(x => (Guid)x.Id).ToList();
 
-            // 2. Chỉ query dữ liệu chi tiết cho đúng các items được chọn
+            // 2. Chỉ query dữ liệu chi tiết cho đúng các items được chọn ở trang hiện tại
             List<PostResponse> posts = new List<PostResponse>();
             if (postIds.Any())
             {
@@ -82,7 +149,11 @@ namespace Social_Mini_App.Services
                         GroupName = p.Group != null ? p.Group.Name : null,
                         IsShare = false,
                         IsSponsored = p.IsSponsored,
-                        SponsorEndDate = p.SponsorEndDate
+                        SponsorEndDate = p.SponsorEndDate,
+                        IsViolated = p.IsViolated,
+                        ViolationReason = p.ViolationReason,
+                        IsAppealed = p.IsAppealed,
+                        AppealReason = p.AppealReason
                     })
                     .ToListAsync();
             }
@@ -122,19 +193,33 @@ namespace Social_Mini_App.Services
                             ImageUrl = s.OriginalPost.ImageUrl,
                             Privacy = s.OriginalPost.Privacy,
                             IsSponsored = s.OriginalPost.IsSponsored,
-                            SponsorEndDate = s.OriginalPost.SponsorEndDate
+                            SponsorEndDate = s.OriginalPost.SponsorEndDate,
+                            IsViolated = s.OriginalPost.IsViolated,
+                            ViolationReason = s.OriginalPost.ViolationReason,
+                            IsAppealed = s.OriginalPost.IsAppealed,
+                            AppealReason = s.OriginalPost.AppealReason
                         }
                     })
                     .ToListAsync();
             }
 
-            // 3. Kết hợp và sắp xếp: Ưu tiên bài viết được quảng cáo (IsSponsored = true và chưa hết hạn) lên trên, sau đó xếp theo thời gian CreatedAt giảm dần
-            var combined = posts.Concat(shares)
-                .OrderByDescending(p => p.IsSponsored && (p.SponsorEndDate == null || p.SponsorEndDate > DateTime.UtcNow))
-                .ThenByDescending(p => p.CreatedAt)
-                .ToList();
+            // Map lại về đúng vị trí đã sắp xếp ở trên
+            var finalOrdered = new List<PostResponse>();
+            foreach (var item in paginatedItems)
+            {
+                if (!item.IsShare)
+                {
+                    var p = posts.FirstOrDefault(x => x.PostId == item.Id);
+                    if (p != null) finalOrdered.Add(p);
+                }
+                else
+                {
+                    var s = shares.FirstOrDefault(x => x.ShareId == item.Id);
+                    if (s != null) finalOrdered.Add(s);
+                }
+            }
 
-            return combined;
+            return finalOrdered;
         }
 
         // 2. Lấy bài viết của CHÍNH TÔI
@@ -159,7 +244,11 @@ namespace Social_Mini_App.Services
                     GroupName = p.Group != null ? p.Group.Name : null,
                     IsShare = false,
                     IsSponsored = p.IsSponsored,
-                    SponsorEndDate = p.SponsorEndDate
+                    SponsorEndDate = p.SponsorEndDate,
+                    IsViolated = p.IsViolated,
+                    ViolationReason = p.ViolationReason,
+                    IsAppealed = p.IsAppealed,
+                    AppealReason = p.AppealReason
                 })
                 .ToListAsync();
 
@@ -195,7 +284,11 @@ namespace Social_Mini_App.Services
                         ImageUrl = s.OriginalPost.ImageUrl,
                         Privacy = s.OriginalPost.Privacy,
                         IsSponsored = s.OriginalPost.IsSponsored,
-                        SponsorEndDate = s.OriginalPost.SponsorEndDate
+                        SponsorEndDate = s.OriginalPost.SponsorEndDate,
+                        IsViolated = s.OriginalPost.IsViolated,
+                        ViolationReason = s.OriginalPost.ViolationReason,
+                        IsAppealed = s.OriginalPost.IsAppealed,
+                        AppealReason = s.OriginalPost.AppealReason
                     }
                 })
                 .ToListAsync();
@@ -217,7 +310,7 @@ namespace Social_Mini_App.Services
                 .AnyAsync(fid => _context.FriendshipMembers.Any(fm2 => fm2.FriendshipId == fid && fm2.UserId == userId));
 
             var posts = await _context.Posts
-                .Where(p => p.UserId == userId)
+                .Where(p => p.UserId == userId && !p.IsViolated) // Không lấy bài viết vi phạm khi người khác xem
                 .Where(p => p.UserId == currentUserId 
                          || p.Privacy == "Public" 
                          || (p.Privacy == "Friends" && isFriend))
@@ -238,12 +331,16 @@ namespace Social_Mini_App.Services
                     GroupName = p.Group != null ? p.Group.Name : null,
                     IsShare = false,
                     IsSponsored = p.IsSponsored,
-                    SponsorEndDate = p.SponsorEndDate
+                    SponsorEndDate = p.SponsorEndDate,
+                    IsViolated = p.IsViolated,
+                    ViolationReason = p.ViolationReason,
+                    IsAppealed = p.IsAppealed,
+                    AppealReason = p.AppealReason
                 })
                 .ToListAsync();
 
             var shares = await _context.Shares
-                .Where(s => s.UserId == userId)
+                .Where(s => s.UserId == userId && !s.OriginalPost!.IsViolated) // Không lấy bài share vi phạm khi người khác xem
                 .Where(s => s.UserId == currentUserId 
                          || s.OriginalPost!.Privacy == "Public" 
                          || (s.OriginalPost.Privacy == "Friends" && isFriend))
@@ -277,7 +374,11 @@ namespace Social_Mini_App.Services
                         ImageUrl = s.OriginalPost.ImageUrl,
                         Privacy = s.OriginalPost.Privacy,
                         IsSponsored = s.OriginalPost.IsSponsored,
-                        SponsorEndDate = s.OriginalPost.SponsorEndDate
+                        SponsorEndDate = s.OriginalPost.SponsorEndDate,
+                        IsViolated = s.OriginalPost.IsViolated,
+                        ViolationReason = s.OriginalPost.ViolationReason,
+                        IsAppealed = s.OriginalPost.IsAppealed,
+                        AppealReason = s.OriginalPost.AppealReason
                     }
                 })
                 .ToListAsync();
@@ -410,6 +511,38 @@ namespace Social_Mini_App.Services
                     AvatarUrl = l.User.AvatarUrl
                 })
                 .ToListAsync();
+        }
+
+        public async Task<PostResponse?> GetPostResponseByIdAsync(Guid id, Guid currentUserId)
+        {
+            return await _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.Group)
+                .Where(p => p.PostId == id)
+                .Select(p => new PostResponse
+                {
+                    PostId = p.PostId,
+                    PostContent = p.PostContent,
+                    CreatedAt = p.CreatedAt,
+                    UserId = p.UserId,
+                    FullName = p.User!.FullName ?? p.User.Username,
+                    AvatarUrl = p.User.AvatarUrl,
+                    ImageUrl = p.ImageUrl,
+                    Privacy = p.Privacy,
+                    LikeCount = p.Likes.Count(),
+                    IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
+                    CommentCount = p.Comments.Count(),
+                    GroupId = p.GroupId,
+                    GroupName = p.Group != null ? p.Group.Name : null,
+                    IsShare = false,
+                    IsSponsored = p.IsSponsored,
+                    SponsorEndDate = p.SponsorEndDate,
+                    IsViolated = p.IsViolated,
+                    ViolationReason = p.ViolationReason,
+                    IsAppealed = p.IsAppealed,
+                    AppealReason = p.AppealReason
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<bool> SharePostAsync(Share share)
