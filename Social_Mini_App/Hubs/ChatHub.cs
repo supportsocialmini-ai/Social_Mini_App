@@ -426,6 +426,15 @@ namespace Social_Mini_App.Hubs
             }
         }
 
+        public async Task SendWebRTCSignal(Guid receiverId, string signal)
+        {
+            var senderId = Context.UserIdentifier;
+            if (senderId != null)
+            {
+                await Clients.User(receiverId.ToString()).SendAsync("ReceiveWebRTCSignal", senderId, signal);
+            }
+        }
+
         // Cho phép client yêu cầu join vào một SignalR group
         public async Task JoinGroup(Guid groupId)
         {

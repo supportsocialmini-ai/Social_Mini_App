@@ -12,6 +12,7 @@ namespace Social_Mini_App.Dtos.Responses
         public string Privacy { get; set; } = "Public";
         public int LikeCount { get; set; } // Tổng số like
         public bool IsLiked { get; set; } // Thằng đang xem đã like chưa?
+        public bool IsFriend { get; set; } // Đã là bạn bè chưa?
         public bool IsSponsored { get; set; } // Bài viết có đang được quảng cáo không?
         public DateTime? SponsorEndDate { get; set; }
         public string? FirstLikeName { get; set; }

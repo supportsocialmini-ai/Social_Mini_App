@@ -19,104 +19,110 @@ namespace Social_Mini_App.Services
                 .Select(gm => gm.GroupId)
                 .ToListAsync();
 
-            // Lấy tất cả bài viết hợp lệ
-            var postsQuery = await _context.Posts
-                .Where(p => !p.IsViolated) // Ẩn các bài viết vi phạm chính sách khỏi bảng tin chung
-                .Where(p => (p.GroupId == null || joinedGroupIds.Contains(p.GroupId.Value)) &&
-                         (p.UserId == currentUserId 
-                           || p.Privacy == "Public" 
-                           || (p.Privacy == "Friends" && friendsIds.Contains(p.UserId))))
-                .Select(p => new { 
-                    Id = p.PostId, 
+            // 1. Tạo Query tổng quát lấy danh sách ID và thông tin cơ bản
+            var postIdsQuery = _context.Posts
+                .Where(p => !p.IsViolated && p.UserId != currentUserId)
+                .Select(p => new {
+                    Id = p.PostId,
                     IsShare = false,
-                    IsSponsored = p.IsSponsored && (p.SponsorEndDate == null || p.SponsorEndDate > DateTime.UtcNow)
-                })
-                .ToListAsync();
+                    IsSponsored = p.IsSponsored && (p.SponsorEndDate == null || p.SponsorEndDate > DateTime.UtcNow),
+                    UserId = p.UserId,
+                    GroupId = p.GroupId,
+                    Privacy = p.Privacy,
+                    CreatedAt = p.CreatedAt
+                });
 
-            // Lấy tất cả bài share hợp lệ
-            var sharesQuery = await _context.Shares
-                .Where(s => !s.OriginalPost!.IsViolated) // Ẩn các bài viết gốc bị vi phạm chính sách
-                .Where(s => (s.GroupId == null || joinedGroupIds.Contains(s.GroupId.Value)) &&
-                         (s.UserId == currentUserId 
-                          || s.OriginalPost!.Privacy == "Public" 
-                          || (s.OriginalPost.Privacy == "Friends" && friendsIds.Contains(s.UserId))))
-                .Select(s => new { 
-                    Id = s.ShareId, 
+            var shareIdsQuery = _context.Shares
+                .Where(s => !s.OriginalPost!.IsViolated && s.UserId != currentUserId)
+                .Select(s => new {
+                    Id = s.ShareId,
                     IsShare = true,
-                    IsSponsored = false
-                })
+                    IsSponsored = false, // Share không tính là Sponsored
+                    UserId = s.UserId,
+                    GroupId = s.GroupId,
+                    Privacy = s.OriginalPost!.Privacy,
+                    CreatedAt = s.CreatedAt
+                });
+
+            var allIdsQuery = postIdsQuery.Concat(shareIdsQuery);
+
+            // 2. Chạy 4 truy vấn tuần tự
+            // - NHÓM 1: Bạn bè (Ưu tiên nhất, lấy 3 bài)
+            var friendItems = await allIdsQuery
+                .Where(x => friendsIds.Contains(x.UserId) && x.Privacy != "Private" && x.GroupId == null)
+                .OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id)
+                .Skip((page - 1) * 3).Take(3)
                 .ToListAsync();
 
-            var allItems = postsQuery.Concat(sharesQuery).ToList();
+            // - NHÓM 2: Nhóm (Lấy 2 bài)
+            var groupItems = await allIdsQuery
+                .Where(x => x.GroupId != null && joinedGroupIds.Contains(x.GroupId.Value))
+                .OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id)
+                .Skip((page - 1) * 2).Take(2)
+                .ToListAsync();
 
-            if (!allItems.Any())
-            {
-                return new List<PostResponse>();
-            }
+            // - NHÓM 3: Quảng cáo (Lấy 2 bài)
+            var sponsorItems = await allIdsQuery
+                .Where(x => x.IsSponsored)
+                .OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id)
+                .Skip((page - 1) * 2).Take(2)
+                .ToListAsync();
 
-            // Chia làm 2 nhóm: Bài quảng cáo và bài viết thường
-            var sponsoredItems = allItems.Where(x => x.IsSponsored).ToList();
-            var regularItems = allItems.Where(x => !x.IsSponsored).ToList();
+            // Tính toán bù trừ nếu hụt bài ở 3 nhóm trên
+            int missingFriends = 3 - friendItems.Count;
+            int missingGroups = 2 - groupItems.Count;
+            int missingSponsor = 2 - sponsorItems.Count;
+            int exploreCount = 3 + missingFriends + missingGroups + missingSponsor;
 
-            // Sáo trộn ngẫu nhiên cả 2 nhóm sử dụng thuật toán Fisher-Yates
+            // - NHÓM 4: Bài Lạ (Explore, lấy bù để đủ 10 bài/trang)
+            var exploreItems = await allIdsQuery
+                .Where(x => !friendsIds.Contains(x.UserId) 
+                            && x.UserId != currentUserId 
+                            && x.GroupId == null 
+                            && x.Privacy == "Public"
+                            && !x.IsSponsored)
+                .OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id)
+                .Skip((page - 1) * 10).Take(exploreCount)
+                .ToListAsync();
+
+            // 3. Gộp bài Thường:
+            // - Bạn bè: Giữ nguyên thứ tự thời gian mới nhất và đẩy lên đầu.
+            // - Nhóm & Bài Lạ: Trộn ngẫu nhiên với nhau và xếp sau Bạn bè.
             var rand = new Random();
+            var otherRegularItems = groupItems.Concat(exploreItems).OrderBy(x => rand.Next()).ToList();
             
-            int nSpon = sponsoredItems.Count;
-            while (nSpon > 1) {
-                nSpon--;
-                int k = rand.Next(nSpon + 1);
-                var value = sponsoredItems[k];
-                sponsoredItems[k] = sponsoredItems[nSpon];
-                sponsoredItems[nSpon] = value;
-            }
+            var regularItems = friendItems.Concat(otherRegularItems).ToList();
 
-            int nReg = regularItems.Count;
-            while (nReg > 1) {
-                nReg--;
-                int k = rand.Next(nReg + 1);
-                var value = regularItems[k];
-                regularItems[k] = regularItems[nReg];
-                regularItems[nReg] = value;
-            }
+            // 4. Trộn Quảng cáo vào Bài thường
+            var paginatedItems = new List<dynamic>();
+            
+            // 50% cơ hội Bài Quảng Cáo lên đầu trang
+            bool startWithAd = sponsorItems.Any() && rand.Next(0, 2) == 0;
+            
+            int sponsorIdx = 0;
+            int regularIdx = 0;
 
-            // Trộn xen kẽ: 
-            var blendedItems = new List<dynamic>();
-            int sponsoredIndex = 0;
-            int regularIndex = 0;
-
-            // Quyết định ngẫu nhiên xem bài viết đầu tiên trên bảng tin là bài thường hay bài quảng cáo
-            bool startWithRegular = rand.Next(0, 2) == 0; // 50% cơ hội bắt đầu bằng bài thường
-
-            if (startWithRegular && regularIndex < regularItems.Count)
+            if (startWithAd)
             {
-                int firstBatch = rand.Next(3, 6); // Lấy trước 3 đến 5 bài thường lên đầu feed
-                for (int i = 0; i < firstBatch && regularIndex < regularItems.Count; i++)
-                {
-                    blendedItems.Add(regularItems[regularIndex++]);
-                }
+                paginatedItems.Add(sponsorItems[sponsorIdx++]);
             }
 
-            while (sponsoredIndex < sponsoredItems.Count || regularIndex < regularItems.Count)
+            // Trộn các bài còn lại
+            while (regularIdx < regularItems.Count || sponsorIdx < sponsorItems.Count)
             {
-                // Thêm 1 bài quảng cáo ngẫu nhiên nếu còn
-                if (sponsoredIndex < sponsoredItems.Count)
+                // Bốc 2 đến 3 bài thường
+                int takeRegular = rand.Next(2, 4);
+                for (int i = 0; i < takeRegular && regularIdx < regularItems.Count; i++)
                 {
-                    blendedItems.Add(sponsoredItems[sponsoredIndex++]);
+                    paginatedItems.Add(regularItems[regularIdx++]);
                 }
 
-                // Thêm ngẫu nhiên khoảng 6-7 bài thường
-                int regularCountToInsert = rand.Next(6, 8); // sinh ngẫu nhiên 6 hoặc 7
-                for (int i = 0; i < regularCountToInsert && regularIndex < regularItems.Count; i++)
+                // Cài cắm 1 bài quảng cáo
+                if (sponsorIdx < sponsorItems.Count)
                 {
-                    blendedItems.Add(regularItems[regularIndex++]);
+                    paginatedItems.Add(sponsorItems[sponsorIdx++]);
                 }
             }
-
-            // Áp dụng phân trang ở bộ nhớ (in-memory paging) sau khi đã sáo trộn và trộn tỷ lệ
-            var paginatedItems = blendedItems
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
 
             if (!paginatedItems.Any())
             {
@@ -210,12 +216,18 @@ namespace Social_Mini_App.Services
                 if (!item.IsShare)
                 {
                     var p = posts.FirstOrDefault(x => x.PostId == item.Id);
-                    if (p != null) finalOrdered.Add(p);
+                    if (p != null) {
+                        p.IsFriend = friendsIds.Contains(p.UserId);
+                        finalOrdered.Add(p);
+                    }
                 }
                 else
                 {
                     var s = shares.FirstOrDefault(x => x.ShareId == item.Id);
-                    if (s != null) finalOrdered.Add(s);
+                    if (s != null) {
+                        s.IsFriend = friendsIds.Contains(s.UserId);
+                        finalOrdered.Add(s);
+                    }
                 }
             }
 
@@ -293,9 +305,15 @@ namespace Social_Mini_App.Services
                 })
                 .ToListAsync();
 
-            return posts.Concat(shares)
+            var allItems = posts.Concat(shares)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToList();
+
+            foreach(var item in allItems) {
+                item.IsFriend = false; // Bài của chính mình thì không hiện kết bạn
+            }
+
+            return allItems;
         }
 
         // 3. Lấy bài viết của người khác
@@ -383,9 +401,15 @@ namespace Social_Mini_App.Services
                 })
                 .ToListAsync();
 
-            return posts.Concat(shares)
+            var allItems = posts.Concat(shares)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToList();
+
+            foreach(var item in allItems) {
+                item.IsFriend = isFriend;
+            }
+
+            return allItems;
         }
 
         public async Task<List<PostResponse>> GetGroupPostsAsync(Guid groupId, Guid currentUserId)
@@ -450,9 +474,16 @@ namespace Social_Mini_App.Services
                 })
                 .ToListAsync();
 
-            return posts.Concat(shares)
+            var friendsIds = await GetFriendsIdsAsync(currentUserId);
+            var allItems = posts.Concat(shares)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToList();
+
+            foreach(var item in allItems) {
+                item.IsFriend = friendsIds.Contains(item.UserId);
+            }
+
+            return allItems;
         }
 
         private async Task<List<Guid>> GetFriendsIdsAsync(Guid userId)

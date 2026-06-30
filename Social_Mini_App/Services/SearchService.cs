@@ -42,6 +42,21 @@ namespace Social_Mini_App.Services
                 })
                 .ToListAsync();
 
+            var friendsIds = await _context.FriendshipMembers
+                .Where(fm => fm.UserId == currentUserId)
+                .Join(_context.Friendships.Where(f => f.Status == "Accepted"),
+                      fm => fm.FriendshipId, f => f.FriendshipId, (fm, f) => f.FriendshipId)
+                .SelectMany(fid => _context.FriendshipMembers
+                    .Where(fm2 => fm2.FriendshipId == fid && fm2.UserId != currentUserId)
+                    .Select(fm2 => fm2.UserId))
+                .ToListAsync();
+
+            foreach (var user in users)
+            {
+                user.IsMe = user.UserId == currentUserId;
+                user.IsFriend = friendsIds.Contains(user.UserId);
+            }
+
             // Tìm kiếm nhóm Public theo tên, mô tả hoặc category
             var groupsQuery = _context.Groups
                 .Include(g => g.Members)
